@@ -12,10 +12,25 @@ app.listen(3000, function(){
 });
 // What to send when a GET request is made on the port from a client
 app.get("/", function(req, res){
-  res.sendFile(__dirname + "/index.html");
+  res.render("home", {});
+}
+app.get("/login", function(req, res){
+  res.render("login", {});
+});
+app.get("/view", function(req, res){
+  res.render("view", {});
+});
+app.get("/settings", function(req, res){
+  res.render("settings", {});
+});
+app.get("/ticket/:ticknum", function(req, res){
+  res.render("ticket", {});
 });
 // What to do and anything to send back when a POST request is sent
 app.post("/index.html", function(req, res){
   req.body.XXXXX; // use this to select elements from the post request to take information from
   res.send("xxxx"); //use this to send information back
 });
+
+
+// Will need splash page, login page, view page, settings page, and ticket page
