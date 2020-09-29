@@ -1,0 +1,61 @@
+<%- include("partials/header") -%>
+<%- include("partials/sidebar") -%>
+<%- include("partials/navbar") -%>
+
+<!-- Page Wrapper -->
+<div id="wrapper">
+  <!-- Begin Page Content -->
+  <div class="container-fluid">
+    <form action="/newTicket" method="post">
+
+      <!-- Page Heading -->
+      <h1 class="h3 mb-4 text-gray-800 container">New Ticket </h1>
+      <div class="container bt-container bt-container1 bt-vert-spacer bt-header-spacer">
+        <div class="bt-block">
+          <label for="project" class="bt-hz-spacer1">Project: </label>
+          <select class="bt-outline bt-gray-text bt-input-framing" id="project" name="project">
+            <% projects.forEach(function(project){ %>
+              <option value="<%= project.id %>"><%= project.project_name %></option>
+            <% }); %>
+          </select>
+        </div>
+        <input type="text" name="ticket_title" class="bt-block bt-outline bt-gray-text bt-vert-spacer bt-input-framing" placeholder="Ticket Title" style="width: 565px;" />
+        <textarea name="ticket_description" class="bt-block bt-outline bt-gray-text bt-vert-spacer bt-input-framing" placeholder="Ticket Description" rows="8" cols="60" ></textarea>
+        <div  class="bt-block bt-vert-spacer">
+          <label for="createdby" class="bt-hz-spacer1">Created By: </label>
+          <select id="createdby" name="createdby" class="bt-outline bt-gray-text bt-input-framing">
+            <% users.forEach(function(user){ %>
+              <option value="<%= user.id %>"><%= user.name %></option>
+            <% }); %>
+          </select>
+        </div>
+        <div  class="bt-block bt-vert-spacer">
+          <label for="severity" class="bt-hz-spacer1">Severity: </label>
+          <select id="severity" name="severity" class="bt-outline bt-gray-text bt-input-framing">
+            <option value="1">1 - Critical: Application not functional for all users</option>
+            <option value="2">2 - Severe: Application not functional for one user</option>
+            <option value="3">3 - Urgent: Behavioral issue, no workaround</option>
+            <option value="4">4 - Normal: Behavioral issue, workaround available</option>
+          </select>
+        </div>
+        <div  class="bt-block bt-vert-spacer">
+          <label for="category" class="bt-hz-spacer1">Category: </label>
+          <select id="category" name="category" class="bt-outline bt-gray-text bt-input-framing">
+            <% categories.forEach(function(category){ %>
+              <option value="<%= category.id %>"><%= category.cat_name %></option>
+            <% }); %>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-icon-split bt-vert-spacer">
+          <span class="icon text-white-50">
+            <i class="fas fa-flag"></i>
+          </span>
+          <span class="text">Submit</span>
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<%- include("partials/footer") -%>

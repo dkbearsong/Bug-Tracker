@@ -1,0 +1,44 @@
+.bt-container {
+  background-color: #D6E0F0;
+  border-radius: 4px;
+}
+.bt-container1 {
+  padding: 60px 30px;
+}
+.bt-container2 {
+  padding: 30px 30px;
+}
+.bt-gray-text {
+  color: #858796;
+}
+
+
+/* Tickets and New Tickets classes */
+.bt-outline {
+  border: 0;
+  background-color: #FFFFFF;
+  outline: none;
+}
+.bt-outline:focus {
+  border: 2px;
+  outline: 2px;
+  outline-color: #A6A6A4;
+}
+.bt-input-framing {
+  border-radius: 4px;
+  padding: 5px;
+}
+/* general modifiers */
+.bt-block {
+  display: block;
+}
+.bt-vert-spacer {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+.bt-hz-spacer1 {
+  margin-right: 10px;
+}
+.bt-no-display {
+  display: none;
+}
