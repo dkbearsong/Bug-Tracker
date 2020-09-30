@@ -13,6 +13,12 @@ const passport = require('passport');
 const mariadb = require('mariadb');
 const Auth0Strategy = require('passport-auth0');
 const dotenv = require('dotenv');
+const userInViews = require('./lib/middleware/userInViews');
+const authRouter = require('./routes/auth');
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const escapeRegExp = require('lodash.escaperegexp');
+const secured = require('./lib/middleware/secured');
 dotenv.config();
 
 // Assigns express to an app constant
@@ -89,6 +95,7 @@ app.use(function(req, res, next) {
 
 // SQL Logic
 
+const getCurrentUser = ` SELECT id, CONCAT_WS(\' \', first_name, last_name) AS name, email, phone, ext, address_1, address_2, city, state, country, zipcode, contact_pref, user_type FROM users WHERE`;
 const findTicket = `
   SELECT t.id AS id, t.title AS title, t.description AS description, sv.id AS severity, p.project_name AS project_name, p.project_description AS project_description,c.category_name AS project_category, t.status AS status, t.ticket_category AS ticket_category, t.created_timestamp AS created_timestamp, u1.id AS assigned_to_id, CONCAT_WS(\' \', u2.first_name, u2.last_name) AS created_by_name
   FROM tickets t
@@ -124,7 +131,21 @@ const getTickets = `
   ON t.assigned_to = u.id
   INNER JOIN ticket_cat tc
   ON t.ticket_category = tc.id
-  ORDER BY id DESC;`;
+  ORDER BY t.id DESC;`;
+  const getMyTickets = `
+    SELECT t.id AS id, t.title AS title, sv.severity_name AS severity, p.project_name AS project_name, st.status_name, tc.cat_name AS category, t.created_timestamp AS created_timestamp
+    FROM tickets t
+    INNER JOIN status st
+    ON t.status = st.id
+    INNER JOIN severity sv
+    ON t.severity = sv.id
+    INNER JOIN proj p
+    ON t.proj_id = p.id
+    INNER JOIN users u
+    ON t.assigned_to = u.id
+    INNER JOIN ticket_cat tc
+    ON t.ticket_category = tc.id
+    WHERE t.user_id = `;
 const getProjects = `
   SELECT id, project_name
   FROM proj;`;
@@ -142,64 +163,42 @@ ON tn.ticket_id = t.id
 INNER JOIN users u
 ON tn.created_by = u.id
 WHERE`;
+const getOpenCount = `SELECT COUNT(*) AS count FROM tickets WHERE status < 5;`;
+const getMyCount = `SELECT COUNT(t.id) AS count FROM tickets t INNER JOIN users u ON t.assigned_to = u.id WHERE status < 5 AND u.auth0_id = \'`;
 
 
 // Assigns port to listen to when fired up
 app.listen(3000, function() {
   console.log("The server has been started on port 3000");
 });
+// 404 catch
+
+
 // What to send when a GET request is made on the port from a client
-app.get('/', function(req, res) {
-  if (res.locals.loggedIn === true) {
-    res.redirect('/dashboard');
-  } else {
-    res.render('./home', {});
-  }
-});
-app.get('/signin', function(req, res) {
-  res.render('signin');
-});
-app.get('/login', passport.authenticate('auth0', {
-    clientID: myVars.clientID,
-    domain: myVars.domain,
-    redirectUri: myVars.callbackURL,
-    responseType: 'code',
-    audience: 'https://dev-xduxy4hw.us.auth0.com/userinfo',
-    scope: 'openid profile'
-  },
-  function(req, res) {
-    res.redirect('/');
-  }));
-app.get('/logout', function(req, res) {
-  req.logout();
-  res.redirect('/');
-});
-app.get('/callback',
-  passport.authenticate('auth0', {
-    failureRedirect: '/failure'
-  }),
-  function(req, res) {
-    res.redirect('/dashboard');
-  }
-);
-app.get('/user', function(req, res, next) {
-  res.render('user', {
-    user: req.user
-  })
-});
+app.use(userInViews());
+app.use('/', authRouter);
+app.use('/', indexRouter);
+app.use('/', usersRouter);
 app.get('/failure', function(req, res, next) {
   res.render('failure');
 });
-app.get("/view", function(req, res) {
-  res.render("view", {});
-});
-app.get("/dashboard", async function(req, res) {
+app.get("/dashboard", secured(), async function(req, res) {
+  const { _raw, _json, ...userProfile } = req.user;
   let conn;
+  const myCount = getMyCount + userProfile.user_id + '\';';
   try {
     conn = await pool.getConnection();
     let openTickets = await conn.query(getTickets);
+    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
+    const openCount = await conn.query(getOpenCount);
+    const myCountQuery = await conn.query(myCount);
     res.render("dashboard", {
-      open: openTickets
+      pageTitle: "Ziploll: Dashboard",
+      open: openTickets,
+      openCount: openCount[0].count,
+      myCount: myCountQuery[0].count,
+      user: user[0].name,
+      user_id: user[0].id
     });
   } catch (err) {
     throw err;
@@ -207,17 +206,59 @@ app.get("/dashboard", async function(req, res) {
     if (conn) return conn.release();
   }
 });
-app.get("/settings", function(req, res) {
-  res.render("settings", {});
-});
-app.get("/newTicket", async function(req, res) {
+app.get("/assignedtome", secured(), async function(req, res) {
+  const { _raw, _json, ...userProfile } = req.user;
   let conn;
   try {
     conn = await pool.getConnection();
+    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
+    const myTickets = await conn.query(getMyTickets + user[0].id + ' ORDER BY t.id DESC;');
+    res.render("assignedtome", {
+      pageTitle: "Ziploll: Assigned to Me",
+      open: myTickets,
+      user: user[0].name,
+      user_id: user[0].id
+    });
+  } catch (err) {
+    throw err;
+  } finally {
+    if (conn) return conn.release();
+  }
+});
+app.get("/profile/:user", secured(), async function(req, res){
+  const { _raw, _json, ...userProfile } = req.user;
+  const requestedUser = req.params.user;
+  const userQuery = getCurrentUser + ' id = ' + requestedUser + ';';
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
+    const searchUserProfile = await conn.query(userQuery);
+    res.render("profile", {
+      pageTitle: "Ziploll: " + user[0].name + "\'s Profile",
+      user: user[0].name,
+      user_id: user[0].id,
+      userProfile: searchUserProfile[0]
+    });
+  } catch (err) {
+    throw err;
+  } finally {
+    if (conn) return conn.release();
+  }
+});
+app.get("/newTicket", secured(), async function(req, res) {
+  const { _raw, _json, ...userProfile } = req.user;
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
     let projs = await conn.query(getProjects);
     let users = await conn.query(getTicketAuth);
     let cat = await conn.query(getTicketCategories);
     res.render("newTicket", {
+      pageTitle: "Ziploll: New Ticket",
+      user: user[0].name,
+      user_id: user[0].id,
       projects: projs,
       users: users,
       categories: cat
@@ -228,9 +269,11 @@ app.get("/newTicket", async function(req, res) {
     if (conn) return conn.release();
   }
 });
-app.post("/newTicket", async function(req, res) {
+app.post("/newTicket", secured(), async function(req, res) {
   let conn;
-  const insertQuery = 'INSERT INTO tickets SET title = \'' + req.body.ticket_title + '\', description = \'' + req.body.ticket_description + '\', severity = ' + req.body.severity + ',  proj_id = ' + req.body.project + ', assigned_to = 1, status = 1, ticket_category = ' + req.body.category + ', created_timestamp = \'' + getDateTime() + '\', created_by = ' + req.body.createdby;
+  const ticketTitle = escapeRegExp(req.body.ticket_title).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
+  const ticketDesc = escapeRegExp(req.body.ticket_description).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
+  const insertQuery = 'INSERT INTO tickets SET title = \'' + ticketTitle + '\', description = \'' + ticketDesc + '\', severity = ' + req.body.severity + ',  proj_id = ' + req.body.project + ', assigned_to = 1, status = 1, ticket_category = ' + req.body.category + ', created_timestamp = \'' + getDateTime() + '\', created_by = ' + req.body.created_by + ';';
   try {
     conn = await pool.getConnection();
     let results = conn.query(insertQuery);
@@ -241,12 +284,17 @@ app.post("/newTicket", async function(req, res) {
     if (conn) return conn.release();
   }
 });
-app.get("/newProject", async function(req, res) {
+app.get("/newProject", secured(), async function(req, res) {
+  const { _raw, _json, ...userProfile } = req.user;
   let conn;
   try {
     conn = await pool.getConnection();
+    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
     let categories = await conn.query(getCategories);
     res.render("newProject", {
+      pageTitle: "Ziploll: New Project",
+      user: user[0].name,
+      user_id: user[0].id,
       categories: categories
     });
   } catch (err) {
@@ -255,9 +303,11 @@ app.get("/newProject", async function(req, res) {
     if (conn) return conn.release();
   }
 });
-app.post("/newProject", async function(req, res) {
+app.post("/newProject", secured(), async function(req, res) {
   let conn;
-  const insertQuery = 'INSERT INTO proj SET project_name = \'' + req.body.project_name + '\', project_description = \'' + req.body.project_description + '\', category = ' + req.body.category + ', created_timestamp = \'' + getDateTime() + '\', created_by = 1';
+  const projectTitle = escapeRegExp(req.body.project_name ).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
+  const projectDesc = escapeRegExp(req.body.project_description).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
+  const insertQuery = 'INSERT INTO proj SET project_name = \'' + projectTitle + '\', project_description = \'' + projectDesc + '\', category = ' + req.body.category + ', created_timestamp = \'' + getDateTime() + '\', created_by = ' + req.body.created_by + ';';
   try {
     conn = await pool.getConnection();
     let results = conn.query(insertQuery);
@@ -268,13 +318,15 @@ app.post("/newProject", async function(req, res) {
     if (conn) return conn.release();
   }
 });
-app.get("/ticket/:ticknum", async function(req, res) {
+app.get("/ticket/:ticknum", secured(), async function(req, res) {
+  const { _raw, _json, ...userProfile } = req.user;
   const reqTicket = req.params.ticknum;
   const ticketQ = findTicket + ' t.id = ' + reqTicket + ';';
   const notesQ = getTicketNotes + ' t.id = ' + reqTicket + ' ORDER BY created_timestamp DESC;'
   let conn;
   try {
     conn = await pool.getConnection();
+    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
     let results = await conn.query(ticketQ);
     let users = await conn.query(getTicketAuth);
     let cat = await conn.query(getTicketCategories);
@@ -282,6 +334,9 @@ app.get("/ticket/:ticknum", async function(req, res) {
     let notes = await conn.query(notesQ);
     let severity = await conn.query(getSeverity);
     res.render("ticket", {
+      pageTitle: "Ziploll: Ticket #" + reqTicket,
+      user: user[0].name,
+      user_id: user[0].id,
       results: results[0],
       users: users,
       ticketCategories: cat,
@@ -295,11 +350,14 @@ app.get("/ticket/:ticknum", async function(req, res) {
     if (conn) return conn.release();
   }
 });
-app.post("/ticket", async function(req, res) {
+app.post("/ticket", secured(), async function(req, res) {
   let conn;
-  const updateTicketQuery = 'UPDATE tickets SET title = \'' + req.body.ticket_title + '\', description = \'' + req.body.ticket_description + '\', severity = ' + req.body.severity + ', assigned_to = ' + req.body.assigned_to+', status = ' + req.body.status + ', ticket_category = ' + req.body.ticket_category + ', lastupdate_timestamp = \'' + getDateTime() + '\' WHERE id = ' + req.body.ticket_value + ';';
+  const ticketTitle = escapeRegExp(req.body.ticket_title).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
+  const ticketDesc = escapeRegExp(req.body.ticket_description).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
+  const updateTicketQuery = 'UPDATE tickets SET title = \'' + ticketTitle + '\', description = \'' + ticketDesc + '\', severity = ' + req.body.severity + ', assigned_to = ' + req.body.assigned_to+', status = ' + req.body.status + ', ticket_category = ' + req.body.ticket_category + ', lastupdate_timestamp = \'' + getDateTime() + '\' WHERE id = ' + req.body.ticket_value + ';';
   if (req.body.new_note != "") {
-    const insertNote = 'INSERT INTO ticket_notes SET ticket_id = ' + req.body.ticket_value + ', created_timestamp = \'' + getDateTime() + '\', created_by = 1, note = \'' + req.body.new_note + '\';';
+    const ticketNote = escapeRegExp(req.body.new_note).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
+    const insertNote = 'INSERT INTO ticket_notes SET ticket_id = ' + req.body.ticket_value + ', created_timestamp = \'' + getDateTime() + '\', created_by = ' + req.body.created_by + ', note = \'' + ticketNote + '\';';
     try {
       conn = await pool.getConnection();
       let updateTicket = conn.query(updateTicketQuery);
@@ -332,4 +390,4 @@ const getDateTime = () => {
   let time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
   let dateTime = date + ' ' + time;
   return dateTime;
-}
+};

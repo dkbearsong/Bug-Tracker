@@ -1,0 +1,26 @@
+<%- include("partials/header") -%>
+<%- include("partials/sidebar") -%>
+<%- include("partials/navbar") -%>
+
+  <!-- Begin Page Content -->
+  <div class="container-fluid">
+    <!-- Page Heading -->
+    <h1 class="container h3 mb-4 text-gray-800"><%= userProfile.name %> </h1>
+    <div class="container bt-container bt-container2 bt-vert-spacer bt-header-spacer">
+      <div class="bt-block bt-vert-spacer">
+        <span class="text-gray-800">User Name</span> <%= userProfile.name %>
+      </div>
+      <div class="bt-block bt-vert-spacer">
+        <span class="text-gray-800">Email Address:</span> <%= userProfile.email %>
+      </div>
+      <div class="bt-block bt-vert-spacer">
+        <span class="text-gray-800">Phone Number: </span> <%= userProfile.phone %> x<%= userProfile.ext %>
+      </div>
+      <div class="bt-block bt-vert-spacer">
+        <span class="text-gray-800">Address: </span> <br /><%= userProfile.address_1 %><br /><%= userProfile.address_2 %><br /><%= userProfile.city %>, <%= userProfile.state %> <%= userProfile.zipcode %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include("partials/footer") -%>

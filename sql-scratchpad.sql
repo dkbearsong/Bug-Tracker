@@ -148,3 +148,9 @@ INSERT INTO ticket_notes SET ticket_id = 15, created_timestamp = '2020-09-29 13:
 INSERT INTO ticket_notes SET ticket_id = 15, created_timestamp = '2020-09-29 13:13:00', created_by = 1, note= 'fixed CSS styling by adding / before start of path in header.ejs. However, ticket information still not loading. ';
 INSERT INTO ticket_notes SET ticket_id = 15, created_timestamp = '2020-09-29 13:30:00', created_by = 1, note= 'Mostly fixed, set the results being passed in through the render assignment to results[0]. Ticket description is still not coming in though. Fixed that by putting <%= results.description %> between the text area tag instead of the value';
 UPDATE tickets SET status = 6 WHERE id = 15;
+
+ALTER TABLE `users` ADD COLUMN (user_name VARCHAR(30));
+ALTER TABLE `users` ADD COLUMN (auth0_id VARCHAR(30));
+UPDATE users SET user_name = 'dkbearsong', auth0_id = 'auth0|5f73911681551f006e425f23' WHERE id = 1;
+ALTER TABLE `users` MODIFY `user_name` VARCHAR(30) NOT NULL UNIQUE;
+ALTER TABLE `users` MODIFY `auth0_id` VARCHAR(30) UNIQUE;

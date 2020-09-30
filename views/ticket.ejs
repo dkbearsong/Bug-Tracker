@@ -2,8 +2,6 @@
 <%- include("partials/sidebar") -%>
 <%- include("partials/navbar") -%>
 
-<!-- Page Wrapper -->
-<div id="wrapper">
   <!-- Begin Page Content -->
   <div class="container-fluid">
     <form action="/ticket" method="post">
@@ -13,30 +11,37 @@
       <!-- Container 1 -->
       <div class="container bt-container bt-container2 bt-vert-spacer bt-header-spacer">
         <div class="bt-block bt-vert-spacer">
-          <span class="text-gray-800">Project Name:</span> <%= results.project_name %>
+          <span class="text-gray-800">Project Name:</span>
+          <br /> <%= results.project_name %>
         </div>
         <div class="bt-block bt-vert-spacer">
-          <span class="text-gray-800">Project Description:</span> <%= results.project_description %>
+          <span class="text-gray-800">Project Description:</span>
+          <br /><%= results.project_description %>
         </div>
         <div class="bt-block bt-vert-spacer">
-          <span class="text-gray-800">Project Category:</span> <%= results.project_category %>
+          <span class="text-gray-800">Project Category:</span>
+          <br /><%= results.project_category %>
         </div>
       </div>
       <!-- Container 2 -->
       <div class="container bt-container bt-container2 bt-vert-spacer bt-header-spacer">
         <div class="bt-block bt-vert-spacer">
-          <span class="text-gray-800">Ticket Number:</span> <%= results.id %>
+          <span class="text-gray-800">Ticket Number:</span>
+          <br /><%= results.id %>
         </div>
-        <input type="text" name="ticket_title" placeholder="Ticket Title" value="<%= results.title %>" class="bt-block bt-outline bt-gray-text bt-vert-spacer bt-input-framing" style="width: 565px;" />
-        <textarea name="ticket_description" placeholder="Ticket Description" rows="8" cols="60" class="bt-block bt-outline bt-gray-text bt-vert-spacer bt-input-framing"><%= results.description %></textarea>
+        <input type="text" name="ticket_title" placeholder="Ticket Title" value="<%= results.title %>" class="bt-block bt-outline bt-gray-text bt-vert-spacer bt-input-framing form-control"/>
+        <textarea name="ticket_description" placeholder="Ticket Description" rows="8" cols="60" class="bt-block bt-outline bt-gray-text bt-vert-spacer bt-input-framing form-control"><%= results.description %></textarea>
         <div class="bt-block bt-vert-spacer">
-          <span class="text-gray-800">Creation Timestamp:</span> <%= results.created_timestamp %>
+          <span class="text-gray-800">Creation Timestamp:</span>
+          <br /><%= results.created_timestamp %>
         </div>
         <div class="bt-block bt-vert-spacer">
-          <span class="text-gray-800">Created By:</span> <%= results.created_by_name %>
+          <span class="text-gray-800">Created By:</span>
+          <br /><%= results.created_by_name %>
         </div>
         <div class="bt-block bt-vert-spacer">
           <label for="severity" class="text-gray-800 bt-hz-spacer1">Severity: </label>
+          <br />
           <select id="severity" name="severity" class="bt-outline bt-gray-text bt-input-framing">
             <% severity.forEach(function(sev){ if (sev.id === results.severity){ %>
             <option value="<%= sev.id %>" selected><%= sev.severity_name %></option>
@@ -47,6 +52,7 @@
         </div>
         <div class="bt-block bt-vert-spacer">
           <label for="assigned_to" class="text-gray-800 bt-hz-spacer1">Assigned To: </label>
+          <br />
           <select id="assigned_to" name="assigned_to" class="bt-outline bt-gray-text bt-input-framing">
             <option value="0"></option>
             <% users.forEach(function(user){ if (user.id === results.assigned_to_id){ %>
@@ -58,6 +64,7 @@
         </div>
         <div class="bt-block bt-vert-spacer">
           <label for="status" class="text-gray-800 bt-hz-spacer1">Status: </label>
+          <br />
           <select id="status" name="status" class="bt-outline bt-gray-text bt-input-framing">
             <% status.forEach(function(state){ if (state.id === results.status){ %>
             <option value="<%= state.id %>" selected><%= state.status_name %></option>
@@ -68,6 +75,7 @@
         </div>
         <div class="bt-block bt-vert-spacer">
           <label for="ticket_category" class="text-gray-800 bt-hz-spacer1">Ticket Category: </label>
+          <br />
           <select id="ticket_category" name="ticket_category" class="bt-outline bt-gray-text bt-input-framing">
             <% ticketCategories.forEach(function(cat){ if (results.ticket_category === cat.id){ %>
             <option value="<%= cat.id %>" selected><%= cat.cat_name %></option>
@@ -77,18 +85,21 @@
           </select>
         </div>
         <div class="bt-block bt-vert-spacer">
-          <span class="text-gray-800">Created by:</span> <%= results.created_by_name %>
+          <span class="text-gray-800">Created by:</span>
+          <br /><%= results.created_by_name %>
         </div>
         <div class="bt-block bt-vert-spacer">
-          <span class="text-gray-800">Date and Time:</span> <%= results.created_timestamp %>
+          <span class="text-gray-800">Date and Time:</span>
+          <br /><%= results.created_timestamp %>
         </div>
         <input type="text" name="ticket_value" id="ticket_value" value="<%= results.id %>" class="bt-no-display">
+        <input type="text" name="created_by" id="created_by" value="<%= user_id %>" class="bt-no-display">
       </div>
       <!-- Container 3 -->
       <div class="container bt-container bt-container2 bt-vert-spacer bt-header-spacer">
         <div class="bt-vert-spacer">
           <label for="new_note" class="bt-block bt-vert-spacer">Note Entry: </label>
-          <textarea name="new_note" placeholder="New Note" rows="8" cols="60" class="bt-block bt-outline bt-gray-text bt-vert-spacer bt-input-framing"></textarea>
+          <textarea name="new_note" placeholder="New Note" rows="8" cols="60" class="bt-block bt-outline bt-gray-text bt-vert-spacer bt-input-framing form-control"></textarea>
         </div>
         <h1 class="container h3 mb-4 text-gray-800">Notes: </h1>
         <% notes.forEach((note) => { %>
@@ -112,6 +123,5 @@
     </form>
   </div>
 </div>
-<!-- /.container-fluid -->
 
 <%- include("partials/footer") -%>

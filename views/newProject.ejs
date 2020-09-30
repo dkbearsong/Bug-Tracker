@@ -2,17 +2,15 @@
 <%- include("partials/sidebar") -%>
 <%- include("partials/navbar") -%>
 
-<!-- Page Wrapper -->
-<div id="wrapper">
   <!-- Begin Page Content -->
   <div class="container-fluid">
     <form class="" action="/newProject" method="post">
       <!-- Page Heading -->
-      <h1 class="h3 mb-4 text-gray-800">New Project </h1>
+      <h1 class="h3 mb-4 text-gray-800 container">New Project </h1>
       <div class="container bt-container bt-container1 bt-vert-spacer bt-header-spacer">
         <label for="project_name" class="text-gray-800 bt-hz-spacer1 bt-block">Project Name: </label>
-        <input type="text" name="project_name" placeholder="Project Name" class="bt-block bt-outline bt-gray-text bt-vert-spacer bt-input-framing" style="width: 565px;">
-        <textarea name="project_description" placeholder="Project Description" rows="8" cols="60" class="bt-block bt-outline bt-gray-text bt-vert-spacer bt-input-framing"></textarea>
+        <input type="text" name="project_name" placeholder="Project Name" class="bt-block bt-outline bt-gray-text bt-vert-spacer bt-input-framing form-control">
+        <textarea name="project_description" placeholder="Project Description" rows="8" cols="60" class="bt-block bt-outline bt-gray-text bt-vert-spacer bt-input-framing form-control"></textarea>
         <div class="bt-block bt-vert-spacer">
           <label for="category" class="text-gray-800 bt-hz-spacer1 bt-block">Category: </label>
           <select id="category" name="category" class="bt-outline bt-gray-text bt-input-framing">
@@ -22,6 +20,7 @@
           </select>
         </div>
         <div class="bt-block bt-vert-spacer">
+          <input type="text" name="created_by" id="created_by" value="<%= user_id %>" class="bt-no-display">
           <button type="submit" class="btn btn-primary btn-icon-split">
             <span class="icon text-white-50">
               <i class="fas fa-flag"></i>
