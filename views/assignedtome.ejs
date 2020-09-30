@@ -1,0 +1,85 @@
+<%- include("partials/header") -%>
+<%- include("partials/sidebar") -%>
+<%- include("partials/navbar") -%>
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+  <div class="row">
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">All Tickets</h6>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <thead>
+              <tr>
+                <th>Ticket #</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Project</th>
+                <th>Assigned To</th>
+                <th>Status</th>
+                <th>Category</th>
+                <th>Ticket Opened</th>
+              </tr>
+            </thead>
+            <tfoot>
+              <tr>
+                <th>Ticket #</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Project</th>
+                <th>Assigned To</th>
+                <th>Status</th>
+                <th>Category</th>
+                <th>Ticket Opened On</th>
+              </tr>
+            </tfoot>
+            <tbody>
+              <% open.forEach((ticket) => { %>
+                <tr>
+                  <td><a href="/ticket/<%= ticket.id %>"><%= ticket.id %></a></td>
+                  <td><%= ticket.title %></td>
+                  <td><%= ticket.severity %></td>
+                  <td><%= ticket.project_name %></td>
+                  <td><%= ticket.assigned_name %></td>
+                  <td><%= ticket.status_name %></td>
+                  <td><%= ticket.category %></td>
+                  <td><%= ticket.created_timestamp %></td>
+                </tr>
+              <% });%>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap core JavaScript-->
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="js/sb-admin-2.min.js"></script>
+<!-- Page level plugins -->
+<script src="vendor/chart.js/Chart.min.js"></script>
+
+<!-- Page level custom scripts -->
+<script src="js/demo/chart-area-demo.js"></script>
+<script src="js/demo/chart-pie-demo.js"></script>
+
+<!-- Page level plugins -->
+<script src="vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+<!-- Page level custom scripts -->
+<script src="js/demo/datatables-demo.js"></script>
+
+
+<%- include("partials/footer") -%>

@@ -1,0 +1,44 @@
+<%- include("partials/header") -%>
+<%- include("partials/sidebar") -%>
+<%- include("partials/navbar") -%>
+
+<!-- Page Wrapper -->
+<div id="wrapper">
+  <!-- Begin Page Content -->
+  <div class="container-fluid">
+    <!-- Page Heading -->
+    <h1 class="container h3 mb-4 text-gray-800"><%= userProfile.name %> </h1>
+    <div class="container bt-container bt-container2 bt-vert-spacer bt-header-spacer">
+      <div class="bt-block bt-vert-spacer">
+        <span class="text-gray-800">User Name</span> <%= userProfile.name %>
+      </div>
+      <div class="bt-block bt-vert-spacer">
+        <span class="text-gray-800">Email Address:</span> <%= userProfile.email %>
+      </div>
+      <div class="bt-block bt-vert-spacer">
+        <span class="text-gray-800">Phone Number: </span> <%= userProfile.phone %> x<%= userProfile.ext %>
+      </div>
+      <div class="bt-block bt-vert-spacer">
+        <span class="text-gray-800">Address: </span> <br /><%= userProfile.address_1 %><br /><%= userProfile.address_2 %><br /><%= userProfile.city %>, <%= userProfile.state %> <%= userProfile.zipcode %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap core JavaScript-->
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="js/sb-admin-2.min.js"></script>
+<!-- Page level plugins -->
+<script src="vendor/chart.js/Chart.min.js"></script>
+
+<!-- Page level custom scripts -->
+<script src="js/demo/chart-area-demo.js"></script>
+<script src="js/demo/chart-pie-demo.js"></script>
+
+<%- include("partials/footer") -%>
