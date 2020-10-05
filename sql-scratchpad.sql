@@ -154,3 +154,72 @@ ALTER TABLE `users` ADD COLUMN (auth0_id VARCHAR(30));
 UPDATE users SET user_name = 'dkbearsong', auth0_id = 'auth0|5f73911681551f006e425f23' WHERE id = 1;
 ALTER TABLE `users` MODIFY `user_name` VARCHAR(30) NOT NULL UNIQUE;
 ALTER TABLE `users` MODIFY `auth0_id` VARCHAR(30) UNIQUE;
+
+CREATE OR REPLACE TABLE `user_cat` (
+  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  cat_name VARCHAR(60)
+);
+
+INSERT INTO  user_cat SET cat_name = 'End User';
+INSERT INTO  user_cat SET cat_name = 'Support Rep';
+INSERT INTO  user_cat SET cat_name = 'Support Manager';
+INSERT INTO  user_cat SET cat_name = 'Developer';
+INSERT INTO  user_cat SET cat_name = 'Dev Manager';
+
+CREATE OR REPLACE TABLE `states` (
+  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  val VARCHAR(2),
+  name VARCHAR(30)
+);
+
+INSERT INTO states SET val = 'AL', name = 'Alabama';
+INSERT INTO states SET val = 'AK', name = 'Alaska';
+INSERT INTO states SET val = 'AZ', name = 'Arizona';
+INSERT INTO states SET val = 'AR', name = 'Arkansas';
+INSERT INTO states SET val = 'CA', name = 'California';
+INSERT INTO states SET val = 'CO', name = 'Colorado';
+INSERT INTO states SET val = 'CT', name = 'Connecticut';
+INSERT INTO states SET val = 'DE', name = 'Delaware';
+INSERT INTO states SET val = 'DC', name = 'District Of Columbia';
+INSERT INTO states SET val = 'FL', name = 'Florida';
+INSERT INTO states SET val = 'GA', name = 'Georgia';
+INSERT INTO states SET val = 'HI', name = 'Hawaii';
+INSERT INTO states SET val = 'ID', name = 'Idaho';
+INSERT INTO states SET val = 'IL', name = 'Illinois';
+INSERT INTO states SET val = 'IN', name = 'Indiana';
+INSERT INTO states SET val = 'IA', name = 'Iowa';
+INSERT INTO states SET val = 'KS', name = 'Kansas';
+INSERT INTO states SET val = 'KY', name = 'Kentucky';
+INSERT INTO states SET val = 'LA', name = 'Louisiana';
+INSERT INTO states SET val = 'ME', name = 'Maine';
+INSERT INTO states SET val = 'MD', name = 'Maryland';
+INSERT INTO states SET val = 'MA', name = 'Massachusetts';
+INSERT INTO states SET val = 'MI', name = 'Michigan';
+INSERT INTO states SET val = 'MN', name = 'Minnesota';
+INSERT INTO states SET val = 'MS', name = 'Mississippi';
+INSERT INTO states SET val = 'MO', name = 'Missouri';
+INSERT INTO states SET val = 'MT', name = 'Montana';
+INSERT INTO states SET val = 'NE', name = 'Nebraska';
+INSERT INTO states SET val = 'NV', name = 'Nevada';
+INSERT INTO states SET val = 'NH', name = 'New Hampshire';
+INSERT INTO states SET val = 'NJ', name = 'New Jersey';
+INSERT INTO states SET val = 'NM', name = 'New Mexico';
+INSERT INTO states SET val = 'NY', name = 'New York';
+INSERT INTO states SET val = 'NC', name = 'North Carolina';
+INSERT INTO states SET val = 'ND', name = 'North Dakota';
+INSERT INTO states SET val = 'OH', name = 'Ohio';
+INSERT INTO states SET val = 'OK', name = 'Oklahoma';
+INSERT INTO states SET val = 'OR', name = 'Oregon';
+INSERT INTO states SET val = 'PA', name = 'Pennsylvania';
+INSERT INTO states SET val = 'RI', name = 'Rhode Island';
+INSERT INTO states SET val = 'SC', name = 'South Carolina';
+INSERT INTO states SET val = 'SD', name = 'South Dakota';
+INSERT INTO states SET val = 'TN', name = 'Tennessee';
+INSERT INTO states SET val = 'TX', name = 'Texas';
+INSERT INTO states SET val = 'UT', name = 'Utah';
+INSERT INTO states SET val = 'VT', name = 'Vermont';
+INSERT INTO states SET val = 'VA', name = 'Virginia';
+INSERT INTO states SET val = 'WA', name = 'Washington';
+INSERT INTO states SET val = 'WV', name = 'West Virginia';
+INSERT INTO states SET val = 'WI', name = 'Wisconsin';
+INSERT INTO states SET val = 'WY', name = 'Wyoming';
