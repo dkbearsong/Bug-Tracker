@@ -29,7 +29,7 @@
         </div>
         <div class="bt-block bt-vert-spacer">
           <input type="text" name="city" placeholder="City" class="bt-outline bt-gray-text bt-vert-spacer bt-hz-spacer1"/>
-          <select class="bt-outline bt-gray-text bt-vert-spacer bt-hz-spacer1">
+          <select class="bt-outline bt-gray-text bt-vert-spacer bt-hz-spacer1" name="state">
             <% states.forEach((state) => { %>
               <option value="<%= state.val %>"><%= state.name %></option>
             <% })%>

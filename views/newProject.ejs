@@ -19,10 +19,47 @@
             <% }); %>
           </select>
         </div>
+
         <!-- Desired Features -->
-        <!-- Documentation -->
+        <div id="desired-features" class="header">
+          <label for="desired_feature" style="margin:5px">Desired Features</label>
+          <div class="bt-block">
+            <input type="text" id="desired_features" placeholder="Features..." name="desired_feature" class="bt-outline bt-gray-text bt-list-spacer bt-input-framing">
+            <span onclick="newDF()" class="bt-addBtn">Add</span>
+          </div>
+        </div>
+
+        <ul id="dfUL" name="desired_features" class="bt-ul-df">
+        </ul>
+
         <!-- Languages and Platforms -->
+        <div id="languages" class="header">
+          <label for="language-input" style="margin:5px">Languages and Platforms</label>
+          <div class="bt-block">
+            <input type="text" id="language-input" placeholder="Language..." name="language-input" class="bt-outline bt-gray-text bt-list-spacer bt-input-framing">
+            <span onclick="newLP()" class="bt-addBtn">Add</span>
+          </div>
+        </div>
+
+        <ul id="lpUL" name="language-items" class="bt-ul-lp">
+        </ul>
+
         <!-- Sprints -->
+        <div id="sprints" class="header">
+          <label for="sprints-input" style="margin:5px">Sprints</label>
+          <div class="bt-block">
+            <input type="text" id="sprints-input" placeholder="Sprint Item..." name="sprints-input" class="bt-outline bt-gray-text bt-list-spacer bt-input-framing">
+            <span onclick="newSprint()" class="bt-addBtn">Add</span>
+          </div>
+        </div>
+
+        <ul id="sUL" name="sprint_items" class="bt-ul-sprints">
+        </ul>
+
+        <!-- Documentation -->
+
+
+        <!-- Submit button -->
         <div class="bt-block bt-vert-spacer">
           <input type="text" name="created_by" id="created_by" value="<%= user_id %>" class="bt-no-display">
           <button type="submit" class="btn btn-primary btn-icon-split">
@@ -36,5 +73,8 @@
     </form>
   </div>
 </div>
+
+<!-- Custom script for creating a list that adds items -->
+<script src="/js/list.js"></script>
 
 <%- include("partials/footer") -%>

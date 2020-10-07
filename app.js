@@ -157,7 +157,12 @@ const getAllProjects = `
   INNER JOIN category c
   ON p.category = c.id
   ORDER BY p.id DESC;
-  `
+  `;
+const getAllUsers = `
+  SELECT u.id AS id, CONCAT_WS(\' \', u.first_name, u.last_name) AS name, u.user_name AS user_name, uc.cat_name AS user_type
+  FROM users u
+  INNER JOIN user_cat uc
+  ON u.user_type = uc.id;`;
 const getCategories = 'SELECT * FROM category;';
 const getTicketCategories = 'SELECT * FROM ticket_cat;';
 const getStatus = 'SELECT * FROM status;';
@@ -248,8 +253,28 @@ app.get("/allprojects", secured(), async function(req, res) {
     const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
     const allProjects = await conn.query(getAllProjects);
     res.render("allprojects", {
-      pageTitle: "Ziploll: Assigned to Me",
+      pageTitle: "Ziploll: All Projects",
       open: allProjects,
+      user: user[0].name,
+      user_id: user[0].id
+    });
+  } catch (err) {
+    throw err;
+  } finally {
+    if (conn) return conn.release();
+  }
+});
+app.get("/allusers", secured(), async function(req, res) {
+  const { _raw, _json, ...userProfile } = req.user;
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
+    const allUsers = await conn.query(getAllUsers);
+    console.log(allUsers)
+    res.render("allusers", {
+      pageTitle: "Ziploll: All Users",
+      open: allUsers,
       user: user[0].name,
       user_id: user[0].id
     });
@@ -284,17 +309,21 @@ app.get("/newprofile", secured(), async function(req, res) {
 });
 app.post("/newProfile", secured(), async function(req, res) {
   let conn;
+  let extReq = '';
   const firstName = escapeRegExp(req.body.first_name ).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
   const lastName = escapeRegExp(req.body.last_name).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
   const address1 = escapeRegExp(req.body.address_1).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
   const address2 = escapeRegExp(req.body.address_2).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
   const city = escapeRegExp(req.body.city).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const insertQuery = 'INSERT INTO users SET first_name = \'' + firstName + '\', last_name = \'' + lastName + '\', email = \'' + req.body.email + '\', phone_number = \'' + req.body.phone_number + '\', ext = ' + req.body.extension + ', address_1 = \'' + address1 + '\', , address_2 = \'' + address2 + '\', city = \'' + city + '\', state = \'' + req.body.state + '\', zipcode = ' + req.body.zipcode + ', auth0_id = \'' + req.body.auth0 + '\';';
+  const phone = req.body.phone_number;
+  if (req.body.extension != '') {
+    extReq = '\', ext = ' + req.body.extension;
+  }
+  const insertQuery = 'INSERT INTO users SET first_name = \'' + firstName + '\', last_name = \'' + lastName + '\', email = \'' + req.body.email + '\', phone = ' + phone.replace(/-/g, '') + extReq + ', address_1 = \'' + address1 + '\', address_2 = \'' + address2 + '\', city = \'' + city + '\', state = \'' + req.body.state + '\', zipcode = ' + req.body.zipcode + ', auth0_id = \'' + req.body.auth0 + '\';';
   try {
     conn = await pool.getConnection();
     const results = await conn.query(insertQuery);
     const id = await conn.query(getCreatedUser);
-    console.log(id);
     res.redirect('/profile/' + id[0].id);
   } catch (err) {
     throw err;
@@ -338,7 +367,6 @@ app.post("/profile", secured(), async function(req, res) {
     extReq = '\', ext = ' + req.body.extension;
   }
   const insertQuery = 'UPDATE users SET first_name = \'' + firstName + '\', last_name = \'' + lastName + '\', email = \'' + req.body.email + '\', phone = ' + phone.replace(/-/g, '') + extReq + ', address_1 = \'' + address1 + '\', address_2 = \'' + address2 + '\', city = \'' + city + '\', state = \'' + req.body.state + '\', zipcode = ' + req.body.zipcode + ', auth0_id = \'' + req.body.auth0 + '\' WHERE id = ' + req.body.user_id + ';';
-  console.log(insertQuery);
   try {
     conn = await pool.getConnection();
     const results = await conn.query(insertQuery);
@@ -378,7 +406,6 @@ app.post("/newProject", secured(), async function(req, res) {
     conn = await pool.getConnection();
     const results = await conn.query(insertQuery);
     const id = await conn.query(getCreatedProject);
-    console.log(id);
     res.redirect('/project/' + id[0].id);
   } catch (err) {
     throw err;
@@ -483,7 +510,6 @@ app.post("/newTicket", secured(), async function(req, res) {
     conn = await pool.getConnection();
     let results = conn.query(insertQuery);
     const id = await conn.query(getCreatedTicket);
-    console.log(id);
     res.redirect('/ticket/' + id[0].id);
   } catch (err) {
     throw err;

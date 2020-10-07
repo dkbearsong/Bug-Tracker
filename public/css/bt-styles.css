@@ -26,7 +26,7 @@
 }
 .bt-input-framing {
   border-radius: 4px;
-  padding: 5px;
+  padding: 7px;
 }
 /* general modifiers */
 .bt-block {
@@ -41,4 +41,152 @@
 }
 .bt-no-display {
   display: none;
+}
+.bt-pos-right {
+ position: absolute;
+ right: 40px;
+ top: 5px;
+}
+
+/* Projects list management */
+.bt-addBtn{
+  background-color: #4E73DF;
+  border-radius: 3px;
+  border: 0;
+  color: #FFFFFF;
+  font-weight: 600;
+  padding: 5px 20px;
+}
+.bt-list-spacer {
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+/* Style the list items */
+ul {
+  padding-inline-start: 0;
+}
+ul li {
+  cursor: pointer;
+  position: relative;
+  list-style-type: none;
+  transition: 0.2s;
+}
+.bt-ul-df {
+  list-style: none;
+  margin: 1rem 0;
+}
+.bt-ul-lp {
+  width: 400px;
+}
+.bt-ul-sprints {
+  list-style: none;
+  margin: 1rem 0;
+  padding-left: 1rem;
+}
+.bt-ul-df li {
+  background: white;
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
+  font-size: 18px;
+  margin-top: 1rem;
+  min-height: 3rem;
+  padding: 0.75rem 40px 0.75rem 1.5rem ;
+  position: relative;
+  width: 500px;
+}
+.bt-ul-df li:hover {
+  background: #EEECDA;
+}
+.bt-ul-lp li {
+
+}
+.bt-ul-sprints li {
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
+  font-size: 18px;
+  margin-top: 0;
+  min-height: 3rem;
+  padding: 0.75rem 40px 0.75rem 1.5rem ;
+  position: relative;
+}
+.bt-ul-sprints li:hover {
+  background: #EEECDA;
+}
+/* Badge Styling */
+
+.bt-badge {
+  margin: 10px 10px 0 0;
+}
+
+/* Style the close button */
+.close-full {
+  border-radius: 0 0.5rem 0.5rem 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 12px 16px 15px 16px;
+}
+
+.close-full:hover {
+  background-color: #f44336;
+  color: white;
+}
+.badge-pill {
+  padding-right: 24.81px;
+}
+.close-badge {
+  border-radius: 0 0.6rem 0.6rem 0;
+  font-size: 13px;
+  margin-left: 5px;
+  padding: 3px 6px 2px 6px;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.close-badge:hover {
+  background-color: #244196;
+  color: white;
+}
+
+/* When clicked on, add a background color and strike out text */
+ul li.checked {
+  text-decoration: line-through;
+}
+/* Sprint Color stylings */
+.color1 {
+  background: #9FFCDF;
+}
+.color2 {
+  background: #52AD9C;
+  color: white;
+}
+.color3 {
+  background: #71987D;
+  color: white;
+}
+.color4 {
+  background: #8BD175;
+}
+.color5 {
+  background: #5C9D06;
+  color: white;
+}
+.color6 {
+  background: #CB793A;
+  color: white;
+}
+.color7 {
+  background: #FB4B6B;
+  color: white;
+}
+.color8 {
+  background: #876A8A;
+  color: white;
+}
+.color9 {
+  background: #6A1148;
+  color: white;
+}
+.color10 {
+  background: #592242;
+  color: white;
 }
