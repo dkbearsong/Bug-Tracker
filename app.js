@@ -401,6 +401,12 @@ app.post("/newProject", secured(), async function(req, res) {
   let conn;
   const projectTitle = escapeRegExp(req.body.project_name ).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
   const projectDesc = escapeRegExp(req.body.project_description).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
+  const projectFeat = req.body.features;
+  const projectLang = req.body.languages;
+  const projectSprints = req.body.sprints;
+  console.log(projectFeat);
+  console.log(projectLang);
+  console.log(projectSprints);
   const insertQuery = 'INSERT INTO proj SET project_name = \'' + projectTitle + '\', project_description = \'' + projectDesc + '\', category = ' + req.body.category + ', created_timestamp = \'' + getDateTime() + '\', created_by = ' + req.body.created_by + ';';
   try {
     conn = await pool.getConnection();
