@@ -3,7 +3,7 @@
 <%- include("partials/navbar") -%>
 
   <!-- Begin Page Content -->
-  <div class="container-fluid">
+  <div class="container-fluid" id="projectPage">
     <form class="" action="/newProject" method="post">
       <!-- Project definition -->
       <h1 class="h3 mb-4 text-gray-800 container">New Project </h1>
@@ -26,7 +26,7 @@
           <div class="bt-block">
             <input type="text" id="df-input" placeholder="Features..." name="df-input" class="bt-outline bt-gray-text bt-list-spacer bt-input-framing">
             <span onclick="newDF()" class="bt-addBtn">Add</span>
-            <input type="hidden" id="features" name="features" value="" />
+            <input type="hidden" id="features" name="features" value="{}" />
           </div>
         </div>
 
@@ -39,7 +39,7 @@
           <div class="bt-block">
             <input type="text" id="language-input" placeholder="Language..." name="language-input" class="bt-outline bt-gray-text bt-list-spacer bt-input-framing">
             <span onclick="newLP()" class="bt-addBtn">Add</span>
-            <input type="hidden" id="languages" name="languages" value="" />
+            <input type="hidden" id="languages" name="languages" value="{}" />
           </div>
         </div>
 
@@ -52,7 +52,7 @@
           <div class="bt-block">
             <input type="text" id="sprints-input" placeholder="Sprint Item..." name="sprints-input" class="bt-outline bt-gray-text bt-list-spacer bt-input-framing" />
             <span onclick="newSprint()" class="bt-addBtn">Add</span>
-            <input type="hidden" id="sprints" name="sprints" value="" />
+            <input type="hidden" id="sprints" name="sprints" value="{}" />
           </div>
         </div>
 

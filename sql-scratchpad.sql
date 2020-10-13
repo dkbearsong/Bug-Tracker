@@ -223,3 +223,67 @@ INSERT INTO states SET val = 'WA', name = 'Washington';
 INSERT INTO states SET val = 'WV', name = 'West Virginia';
 INSERT INTO states SET val = 'WI', name = 'Wisconsin';
 INSERT INTO states SET val = 'WY', name = 'Wyoming';
+
+CREATE OR REPLACE TABLE `proj_features` (
+  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  project_id INTEGER,
+  feature VARCHAR(1000),
+  CONSTRAINT `fk_project_features`
+    FOREIGN KEY (project_id) REFERENCES proj (id)
+);
+CREATE OR REPLACE TABLE `proj_languages` (
+  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  project_id INTEGER,
+  language VARCHAR(50),
+  CONSTRAINT `fk_project_languages`
+    FOREIGN KEY (project_id) REFERENCES proj (id)
+);
+CREATE OR REPLACE TABLE `proj_sprints` (
+  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  project_id INTEGER,
+  sprint VARCHAR(1000),
+  sprint_num INTEGER,
+  is_checked TINYINT(1)
+  CONSTRAINT `fk_project_sprints`
+    FOREIGN KEY (project_id) REFERENCES proj (id)
+);
+
+'INSERT INTO proj_features SET project_id = '+ id[0].id + ', feature = \'' + escapeRegExp(item.feature).replace(/"/g, '\\\"').replace(/'/g, "\\\'") +'\' ; '
+'INSERT INTO proj_languages SET project_id = '+ id[0].id + ', language = \'' + escapeRegExp(item.language).replace(/"/g, '\\\"').replace(/'/g, "\\\'")  +'\' ; '
+'INSERT INTO proj_sprints SET project_id = '+ id[0].id + ', sprint = \'' + escapeRegExp(item.sprint).replace(/"/g, '\\\"').replace(/'/g, "\\\'") + '\', sprint_num =' + item.sprint_num + ', is_checked = ' + (item.checked ? 1 : 0) + '; '
+
+ALTER TABLE `proj_sprints` ADD COLUMN (is_checked TINYINT(1));
+
+SELECT pf.feature AS feature, null AS language, null AS sprint, null AS sprint_num, null AS is_checked
+FROM proj p
+INNER JOIN proj_features pf
+ON p.id = pf.project_id
+WHERE p.id = 88
+UNION
+SELECT null AS feature, pl.language AS language, null AS sprint, null AS sprint_num, null AS is_checked
+FROM proj p
+INNER JOIN proj_languages pl
+ON p.id = pl.project_id
+WHERE p.id = 88
+UNION
+SELECT null AS feature, null AS language, ps.sprint AS sprint, ps.sprint_num AS sprint_num, ps.is_checked AS is_checked
+FROM proj p
+INNER JOIN proj_sprints ps
+ON p.id = ps.project_id
+WHERE p.id = 88;
+
+{"0":{"sprint":"test","sprint_num":"1","checked":false},"1":{"sprint":"test","sprint_num":"2","checked":false},"2":{"sprint":"test","sprint_num":"3","checked":false}}
+{
+  '0': { sprint: 'test', sprint_num: '1', checked: false },
+  '1': { sprint: 'test', sprint_num: '2', checked: false },
+  '2': { sprint: 'test', sprint_num: '3', checked: false }
+}
+
+
+SELECT p.id, p.project_name AS project_name, p.project_description AS project_description, p.category AS category, p.created_timestamp AS created_timestamp, CONCAT_WS(' ', u.first_name, u.last_name) AS created_by, p.lastupdate_timestamp as lastupdate
+FROM proj p
+INNER JOIN category c
+ON p.category = c.id
+INNER JOIN users u
+ON p.created_by = u.id
+WHERE p.id = 1;

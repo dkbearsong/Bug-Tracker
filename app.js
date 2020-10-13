@@ -14,6 +14,7 @@ const mariadb = require('mariadb');
 const Auth0Strategy = require('passport-auth0');
 const dotenv = require('dotenv');
 const userInViews = require('./lib/middleware/userInViews');
+// const sql = require('./lib/sql');
 const authRouter = require('./routes/auth');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -36,7 +37,8 @@ const pool = mariadb.createPool({
   host: "127.0.0.1",
   user: process.env.MARIADB_USER,
   password: process.env.MARIADB_PASSWORD,
-  database: process.env.MARIADB_DATABASE
+  database: process.env.MARIADB_DATABASE,
+  multipleStatements: true
 })
 
 module.exports = {
@@ -95,7 +97,8 @@ app.use(function(req, res, next) {
 
 // SQL Logic
 
-const getCurrentUser = ` SELECT id, CONCAT_WS(\' \', first_name, last_name) AS name, first_name, last_name, email, phone, ext, address_1, address_2, city, state, country, zipcode,  auth0_id, contact_pref, user_type FROM users WHERE`;
+const getCurrentUser = (user) => 'SELECT id, CONCAT_WS(\' \', first_name, last_name) AS name, first_name, last_name, email, phone, ext, address_1, address_2, city, state, country, zipcode,  auth0_id, contact_pref, user_type FROM users WHERE auth0_id = \'' + user + '\';';
+const getUser = (user) => 'SELECT id, CONCAT_WS(\' \', first_name, last_name) AS name, first_name, last_name, email, phone, ext, address_1, address_2, city, state, country, zipcode,  auth0_id, contact_pref, user_type FROM users WHERE id = \'' + user + '\';';
 const findTicket = `
   SELECT t.id AS id, t.title AS title, t.description AS description, sv.id AS severity, p.project_name AS project_name, p.project_description AS project_description,c.category_name AS project_category, t.status AS status, t.ticket_category AS ticket_category, t.created_timestamp AS created_timestamp, u1.id AS assigned_to_id, CONCAT_WS(\' \', u2.first_name, u2.last_name) AS created_by_name
   FROM tickets t
@@ -132,7 +135,7 @@ const getTickets = `
   INNER JOIN ticket_cat tc
   ON t.ticket_category = tc.id
   ORDER BY t.id DESC;`;
-  const getMyTickets = `
+  const getMyTickets = (user) => `
     SELECT t.id AS id, t.title AS title, sv.severity_name AS severity, p.project_name AS project_name, st.status_name, tc.cat_name AS category, t.created_timestamp AS created_timestamp
     FROM tickets t
     INNER JOIN status st
@@ -145,7 +148,7 @@ const getTickets = `
     ON t.assigned_to = u.id
     INNER JOIN ticket_cat tc
     ON t.ticket_category = tc.id
-    WHERE t.user_id = `;
+    WHERE t.user_id = `  + user + ' ORDER BY t.id DESC;';
 const getProjects = `
   SELECT id, project_name
   FROM proj;`;
@@ -178,12 +181,43 @@ INNER JOIN users u
 ON tn.created_by = u.id
 WHERE`;
 const getOpenCount = `SELECT COUNT(*) AS count FROM tickets WHERE status < 5;`;
-const getMyCount = `SELECT COUNT(t.id) AS count FROM tickets t INNER JOIN users u ON t.assigned_to = u.id WHERE status < 5 AND u.auth0_id = \'`;
+const getMyCount = (user) => 'SELECT COUNT(t.id) AS count FROM tickets t INNER JOIN users u ON t.assigned_to = u.id WHERE status < 5 AND u.auth0_id = \''  + user + '\';';
 const getCreatedTicket = `SELECT MAX(id) AS id FROM tickets;`;
 const getCreatedProject = `SELECT MAX(id) AS id  FROM proj;`;
 const getCreatedUser = `SELECT MAX(id) AS id  FROM users;`;
 const getUserCat = `SELECT * FROM user_cat;`;
 const getStates = `SELECT * FROM states;`;
+const getProjectById = (projId) => {return `
+SELECT p.id AS id, p.project_name AS project_name, p.project_description AS project_description, p.category AS category, p.created_timestamp AS created_timestamp, CONCAT_WS(\' \', u.first_name, u.last_name) AS created_by, p.lastupdate_timestamp as lastupdate
+FROM proj p
+INNER JOIN category c
+ON p.category = c.id
+INNER JOIN users u
+ON p.created_by = u.id
+WHERE p.id = ` + projId + `;`
+};
+const getProjectDetails = (projId) => {return `
+  SELECT pf.id AS id, pf.feature AS feature, null AS language, null AS sprint, null AS sprint_num, null AS is_checked
+  FROM proj p
+  INNER JOIN proj_features pf
+  ON p.id = pf.project_id
+  WHERE p.id =  ` + projId + `
+  UNION
+  SELECT pl.id AS id, null AS feature, pl.language AS language, null AS sprint, null AS sprint_num, null AS is_checked
+  FROM proj p
+  INNER JOIN proj_languages pl
+  ON p.id = pl.project_id
+  WHERE p.id =  ` + projId + `
+  UNION
+  SELECT ps.id AS id, null AS feature, null AS language, ps.sprint AS sprint, ps.sprint_num AS sprint_num, ps.is_checked AS is_checked
+  FROM proj p
+  INNER JOIN proj_sprints ps
+  ON p.id = ps.project_id
+  WHERE p.id =  ` + projId + `;`
+};
+const updateProject = (title, description, cat, projId) => 'UPDATE proj SET project_name = \'' + title + '\', project_description = \'' + description + '\', category = ' + cat + ' WHERE id = ' + projId + ';';
+const insertNewProfile = (fName, lName, email, phone, extReq, add1, add2, city, state, zip, auth0) => 'INSERT INTO users SET first_name = \'' + fName + '\', last_name = \'' + lName + '\', email = \'' + email + '\', phone = ' + phone.replace(/-/g, '') + extReq + ', address_1 = \'' + add1 + '\', address_2 = \'' + add2 + '\', city = \'' + city + '\', state = \'' + state + '\', zipcode = ' + zip + ', auth0_id = \'' + auth0 + '\';';
+const updateProfile = (fName, lName, email, phone, extReq, add1, add2, city, state, zip, auth0, uid) => 'UPDATE users SET first_name = \'' + fName + '\', last_name = \'' + lName + '\', email = \'' + email + '\', phone = ' + phone.replace(/-/g, '') + extReq + ', address_1 = \'' + add1 + '\', address_2 = \'' + add2 + '\', city = \'' + city + '\', state = \'' + state + '\', zipcode = ' + zip + ', auth0_id = \'' + auth0 + '\' WHERE id = ' + uid + ';';
 
 // Assigns port to listen to when fired up
 app.listen(3000, function() {
@@ -205,11 +239,11 @@ app.get('/failure', function(req, res, next) {
 app.get("/dashboard", secured(), async function(req, res) {
   const { _raw, _json, ...userProfile } = req.user;
   let conn;
-  const myCount = getMyCount + userProfile.user_id + '\';';
+  const myCount = getMyCount(userProfile.user_id);
   try {
     conn = await pool.getConnection();
     let openTickets = await conn.query(getTickets);
-    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
+    const user = await conn.query(getCurrentUser(userProfile.user_id));
     const openCount = await conn.query(getOpenCount);
     const myCountQuery = await conn.query(myCount);
     res.render("dashboard", {
@@ -231,8 +265,8 @@ app.get("/assignedtome", secured(), async function(req, res) {
   let conn;
   try {
     conn = await pool.getConnection();
-    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
-    const myTickets = await conn.query(getMyTickets + user[0].id + ' ORDER BY t.id DESC;');
+    const user = await conn.query(getCurrentUser(userProfile.user_id));
+    const myTickets = await conn.query(getMyTickets(user[0].id));
     res.render("assignedtome", {
       pageTitle: "Ziploll: Assigned to Me",
       open: myTickets,
@@ -250,7 +284,7 @@ app.get("/allprojects", secured(), async function(req, res) {
   let conn;
   try {
     conn = await pool.getConnection();
-    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
+    const user = await conn.query(getCurrentUser(userProfile.user_id));
     const allProjects = await conn.query(getAllProjects);
     res.render("allprojects", {
       pageTitle: "Ziploll: All Projects",
@@ -269,9 +303,8 @@ app.get("/allusers", secured(), async function(req, res) {
   let conn;
   try {
     conn = await pool.getConnection();
-    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
+    const user = await conn.query(getCurrentUser(userProfile.user_id));
     const allUsers = await conn.query(getAllUsers);
-    console.log(allUsers)
     res.render("allusers", {
       pageTitle: "Ziploll: All Users",
       open: allUsers,
@@ -291,7 +324,7 @@ app.get("/newprofile", secured(), async function(req, res) {
   let conn;
   try {
     conn = await pool.getConnection();
-    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
+    const user = await conn.query(getCurrentUser(userProfile.user_id));
     const categories = await conn.query(getUserCat);
     const statesList = await conn.query(getStates);
     res.render("newProfile", {
@@ -310,16 +343,16 @@ app.get("/newprofile", secured(), async function(req, res) {
 app.post("/newProfile", secured(), async function(req, res) {
   let conn;
   let extReq = '';
-  const firstName = escapeRegExp(req.body.first_name ).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const lastName = escapeRegExp(req.body.last_name).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const address1 = escapeRegExp(req.body.address_1).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const address2 = escapeRegExp(req.body.address_2).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const city = escapeRegExp(req.body.city).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
+  const firstName = cleanRegX(req.body.first_name);
+  const lastName = cleanRegX(req.body.last_name);
+  const address1 = cleanRegX(req.body.address_1);
+  const address2 = cleanRegX(req.body.address_2);
+  const city = cleanRegX(req.body.city);
   const phone = req.body.phone_number;
   if (req.body.extension != '') {
     extReq = '\', ext = ' + req.body.extension;
   }
-  const insertQuery = 'INSERT INTO users SET first_name = \'' + firstName + '\', last_name = \'' + lastName + '\', email = \'' + req.body.email + '\', phone = ' + phone.replace(/-/g, '') + extReq + ', address_1 = \'' + address1 + '\', address_2 = \'' + address2 + '\', city = \'' + city + '\', state = \'' + req.body.state + '\', zipcode = ' + req.body.zipcode + ', auth0_id = \'' + req.body.auth0 + '\';';
+  const insertQuery = insertNewProfile(firstName, lastName, req.body.email, phone, extReq, address1, address2, city, req.body.state, req.body.zipcode, req.body.auth0);
   try {
     conn = await pool.getConnection();
     const results = await conn.query(insertQuery);
@@ -334,11 +367,11 @@ app.post("/newProfile", secured(), async function(req, res) {
 app.get("/profile/:user", secured(), async function(req, res){
   const { _raw, _json, ...userProfile } = req.user;
   const requestedUser = req.params.user;
-  const userQuery = getCurrentUser + ' id = ' + requestedUser + ';';
+  const userQuery = getUser(requestedUser);
   let conn;
   try {
     conn = await pool.getConnection();
-    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
+    const user = await conn.query(getCurrentUser(userProfile.user_id));
     const searchUserProfile = await conn.query(userQuery);
     const statesList = await conn.query(getStates);
     res.render("profile", {
@@ -357,16 +390,16 @@ app.get("/profile/:user", secured(), async function(req, res){
 app.post("/profile", secured(), async function(req, res) {
   let conn;
   let extReq = '';
-  const firstName = escapeRegExp(req.body.first_name ).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const lastName = escapeRegExp(req.body.last_name).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const address1 = escapeRegExp(req.body.address_1).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const address2 = escapeRegExp(req.body.address_2).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const city = escapeRegExp(req.body.city).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
+  const firstName = cleanRegX(req.body.first_name);
+  const lastName = cleanRegX(req.body.last_name);
+  const address1 = cleanRegX(req.body.address_1);
+  const address2 = cleanRegX(req.body.address_2);
+  const city = cleanRegX(req.body.city);
   const phone = req.body.phone_number;
   if (req.body.extension != '') {
     extReq = '\', ext = ' + req.body.extension;
   }
-  const insertQuery = 'UPDATE users SET first_name = \'' + firstName + '\', last_name = \'' + lastName + '\', email = \'' + req.body.email + '\', phone = ' + phone.replace(/-/g, '') + extReq + ', address_1 = \'' + address1 + '\', address_2 = \'' + address2 + '\', city = \'' + city + '\', state = \'' + req.body.state + '\', zipcode = ' + req.body.zipcode + ', auth0_id = \'' + req.body.auth0 + '\' WHERE id = ' + req.body.user_id + ';';
+  const insertQuery = updateProfile(firstName, lastName, req.body.email, phone, extReq, address1, address2, city, req.body.state, req.body.zipcode, req.body.auth0, req.body.user_id);
   try {
     conn = await pool.getConnection();
     const results = await conn.query(insertQuery);
@@ -383,7 +416,7 @@ app.get("/newProject", secured(), async function(req, res) {
   let conn;
   try {
     conn = await pool.getConnection();
-    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
+    const user = await conn.query(getCurrentUser(userProfile.user_id));
     let categories = await conn.query(getCategories);
     res.render("newProject", {
       pageTitle: "Ziploll: New Project",
@@ -399,52 +432,88 @@ app.get("/newProject", secured(), async function(req, res) {
 });
 app.post("/newProject", secured(), async function(req, res) {
   let conn;
-  const projectTitle = escapeRegExp(req.body.project_name ).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const projectDesc = escapeRegExp(req.body.project_description).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const projectFeat = req.body.features;
-  const projectLang = req.body.languages;
-  const projectSprints = req.body.sprints;
-  console.log(projectFeat);
-  console.log(projectLang);
-  console.log(projectSprints);
+  const projectTitle = cleanRegX(req.body.project_name );
+  const projectDesc = cleanRegX(req.body.project_description);
+  const projectFeat = JSON.parse(req.body.features);
+  const projectLang = JSON.parse(req.body.languages);
+  const projectSprints = JSON.parse(req.body.sprints);
   const insertQuery = 'INSERT INTO proj SET project_name = \'' + projectTitle + '\', project_description = \'' + projectDesc + '\', category = ' + req.body.category + ', created_timestamp = \'' + getDateTime() + '\', created_by = ' + req.body.created_by + ';';
+  let insertFeatures = "";
+  let insertLanguages = "";
+  let insertSprints = "";
+
   try {
     conn = await pool.getConnection();
     const results = await conn.query(insertQuery);
     const id = await conn.query(getCreatedProject);
+    Object.keys(projectFeat).forEach(item => (insertFeatures = insertFeatures.concat('INSERT INTO proj_features SET project_id = '+ id[0].id + ', feature = \'' + cleanRegX(projectFeat[item]["feature"]) +'\'; ')));
+    Object.keys(projectLang).forEach(item => {insertLanguages = insertLanguages.concat('INSERT INTO proj_languages SET project_id = '+ id[0].id + ', language = \'' + cleanRegX(projectLang[item]["language"])  +'\'; ')});
+    Object.keys(projectSprints).forEach(item => {insertSprints = insertSprints.concat('INSERT INTO proj_sprints SET project_id = '+ id[0].id + ', sprint = \'' + cleanRegX(projectSprints[item]["sprint"]) + '\', sprint_num =' + projectSprints[item]["sprint_num"] + ', is_checked = ' + (projectSprints[item]["checked"] ? 1 : 0) + '; ')});
+    const feat = await conn.query(insertFeatures);
+    const lang = await conn.query(insertLanguages);
+    const sprints = await conn.query(insertSprints);
     res.redirect('/project/' + id[0].id);
+    // res.redirect('/dashboard');
   } catch (err) {
     throw err;
   } finally {
     if (conn) return conn.release();
   }
 });
-app.get("/project/:projnum", secured(), async function(req, res) {
+app.get("/projects/:projnum", secured(), async function(req, res) {
   // Need to update this to focus on projects rather than the tickets
   const { _raw, _json, ...userProfile } = req.user;
-  const reqTicket = req.params.ticknum;
-  const ticketQ = findTicket + ' t.id = ' + reqTicket + ';';
-  const notesQ = getTicketNotes + ' t.id = ' + reqTicket + ' ORDER BY created_timestamp DESC;'
+  const reqProject = req.params.projnum;
   let conn;
   try {
     conn = await pool.getConnection();
-    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
-    let results = await conn.query(ticketQ);
-    let users = await conn.query(getTicketAuth);
-    let cat = await conn.query(getTicketCategories);
-    let status = await conn.query(getStatus);
-    let notes = await conn.query(notesQ);
-    let severity = await conn.query(getSeverity);
-    res.render("ticket", {
-      pageTitle: "Ziploll: Ticket #" + reqTicket,
+    const user = await conn.query(getCurrentUser(userProfile.user_id));
+    const proj = await conn.query(getProjectById(reqProject));
+    const projDesc = await conn.query(getProjectDetails(reqProject));
+    let categories = await conn.query(getCategories);
+    let features = "{";
+    let languages = "{";
+    let sprints =  "{";
+    let counter = 0
+    let item = '';
+    for (var i = 0; i < projDesc.length; i++) {
+      if (projDesc[i].feature != null) {
+        item = objFormater(counter, projDesc[i].id, "feature", projDesc[i].feature + '\"');
+        features = features.concat(', ', item);
+        counter++;
+      }
+    }
+    features = features.concat('', '}');
+    features = features.replace(', ', '');
+    counter = 0;
+    for (var i = 0; i < projDesc.length; i++) {
+      if (projDesc[i].language != null) {
+        item = objFormater(counter, projDesc[i].id, "language", projDesc[i].language + '\"');
+        languages = languages.concat(', ', item);
+        counter++;
+      }
+    }
+    languages = languages.concat('', '}');
+    languages = languages.replace(', ', '');
+    counter = 0
+    for (var i = 0; i < projDesc.length; i++) {
+      if (projDesc[i].sprint != null) {
+        item = objFormater(counter, projDesc[i].id, "sprint", projDesc[i].sprint + '\", \"sprint_num\": ' + projDesc[i].sprint_num + ', \"checked\": ' + (projDesc[i].is_checked ? true: false));
+        sprints = sprints.concat(', ', item);
+        counter++;
+      }
+    }
+    sprints = sprints.concat('', '}');
+    sprints = sprints.replace(', ', '');
+    res.render("project", {
+      pageTitle: "Ziploll: Project #" + reqProject + " " + proj[0].project_name,
       user: user[0].name,
       user_id: user[0].id,
-      results: results[0],
-      users: users,
-      ticketCategories: cat,
-      status: status,
-      severity: severity,
-      notes: notes
+      project: proj[0],
+      categories: categories,
+      features: features,
+      languages: languages,
+      sprints: sprints
     });
   } catch (err) {
     throw err;
@@ -453,34 +522,57 @@ app.get("/project/:projnum", secured(), async function(req, res) {
   }
 });
 app.post("/project", secured(), async function(req, res) {
-  // Need to update this to focus on projects rather than the tickets
   let conn;
-  const ticketTitle = escapeRegExp(req.body.ticket_title).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const ticketDesc = escapeRegExp(req.body.ticket_description).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-  const updateTicketQuery = 'UPDATE tickets SET title = \'' + ticketTitle + '\', description = \'' + ticketDesc + '\', severity = ' + req.body.severity + ', assigned_to = ' + req.body.assigned_to+', status = ' + req.body.status + ', ticket_category = ' + req.body.ticket_category + ', lastupdate_timestamp = \'' + getDateTime() + '\' WHERE id = ' + req.body.ticket_value + ';';
-  if (req.body.new_note != "") {
-    const ticketNote = escapeRegExp(req.body.new_note).replace(/"/g, '\\\"').replace(/'/g, "\\\'");
-    const insertNote = 'INSERT INTO ticket_notes SET ticket_id = ' + req.body.ticket_value + ', created_timestamp = \'' + getDateTime() + '\', created_by = ' + req.body.created_by + ', note = \'' + ticketNote + '\';';
-    try {
-      conn = await pool.getConnection();
-      let updateTicket = conn.query(updateTicketQuery);
-      let updateNotes = conn.query(insertNote);
-      res.redirect('/ticket/' + req.body.ticket_value);
-    } catch (err) {
-      throw err;
-    } finally {
-      if (conn) return conn.release();
-    }
-  } else {
-    try {
-      conn = await pool.getConnection();
-      let updateTicket = conn.query(updateTicketQuery);
-      res.redirect('/dashboard');
-    } catch (err) {
-      throw err;
-    } finally {
-      if (conn) return conn.release();
-    }
+  const projectTitle = cleanRegX(req.body.project_name);
+  const projectDesc = cleanRegX(req.body.project_description);
+  const projectFeat = JSON.parse(req.body.features);
+  const projectLang = JSON.parse(req.body.languages);
+  const projectSprints = JSON.parse(req.body.sprints);
+  const updateQuery = updateProject(projectTitle, projectDesc, req.body.category, req.body.proj_id);
+  let updateFeatures = "";
+  let updateLanguages = "";
+  let updateSprints = "";
+  const projUpdate = (action, table, id, item, where) => action + ' proj_' + table + 's SET project_id = ' + id + ', ' + table + ' = \'' + cleanRegX(item) + '\' ' + where + '; ';
+  console.log(updateQuery);
+  try {
+    conn = await pool.getConnection();
+    const results = await conn.query(updateQuery);
+    const id = await conn.query(getCreatedProject);
+    Object.keys(projectFeat).forEach(item => {
+      if (projectFeat[item]["id"] != 0 && projectFeat[item]["feature"] != '') {
+        updateFeatures = updateFeatures.concat(projUpdate('UPDATE', 'feature', id[0].id, projectFeat[item]["feature"], "WHERE id = " + projectFeat[item]["id"]));
+      } else if (projectFeat[item]["id"] != 0 && projectFeat[item]["feature"] === '' ) {
+        updateFeatures = updateFeatures.concat('DELETE FROM proj_features WHERE id = ' + projectFeat[item]["id"] + '; ');
+      } else if (projectFeat[item]["id"] === 0 && projectFeat[item]["feature"] != '') {
+        updateFeatures = updateFeatures.concat(projUpdate('INSERT INTO', 'feature', id[0].id, projectFeat[item]["feature"], ''));
+      }
+    });
+    Object.keys(projectLang).forEach(item => {
+      if (projectLang[item]["id"] != 0 && projectLang[item]["language"] != '') {
+        updateLanguages = updateLanguages.concat(projUpdate('UPDATE', 'language', id[0].id, projectLang[item]["language"], "WHERE id = " + projectLang[item]["id"]));
+      } else if (projectLang[item]["id"] != 0 && projectLang[item]["language"] === '' ) {
+        updateLanguages = updateLanguages.concat('DELETE FROM proj_languages WHERE id = ' + projectLang[item]["id"] + '; ');
+      } else if (projectLang[item]["id"] === 0 && projectLang[item]["language"] != '') {
+        updateLanguages = updateLanguages.concat(projUpdate('INSERT INTO', 'language', id[0].id, projectLang[item]["language"], ''));
+      }
+    });
+    Object.keys(projectSprints).forEach(item => {
+      if (projectSprints[item]["id"] != 0 && projectSprints[item]["sprint"] != '') {
+        updateSprints = updateSprints.concat(projUpdate('UPDATE', 'sprint', id[0].id, projectSprints[item]["sprint"], ', sprint_num =' + projectSprints[item]["sprint_num"] + ', is_checked = ' + (projectSprints[item]["checked"] ? 1 : 0) + ' WHERE id = ' + projectFeat[item]["id"]));
+      } else if (projectSprints[item]["id"] != 0 && projectSprints[item]["sprint"] === '' ) {
+        updateSprints = updateSprints.concat('DELETE FROM proj_sprints WHERE id = ' + projectSprints[item]["id"] + '; ');
+      } else if (projectSprints[item]["id"] === 0 && projectSprints[item]["sprint"] != '') {
+        updateSprints = updateSprints.concat(projUpdate('INSERT INTO', 'sprint', id[0].id, projectSprints[item]["sprint"], ', sprint_num =' + projectSprints[item]["sprint_num"] + ', is_checked = ' + (projectSprints[item]["checked"] ? 1 : 0)));
+      }
+    });
+    const feat = await conn.query(updateFeatures);
+    const lang = await conn.query(updateLanguages);
+    const sprints = await conn.query(updateSprints);
+    res.redirect('/projects/' + id[0].id);
+  } catch (err) {
+    throw err;
+  } finally {
+    if (conn) return conn.release();
   }
 });
 // Tickets
@@ -489,7 +581,7 @@ app.get("/newTicket", secured(), async function(req, res) {
   let conn;
   try {
     conn = await pool.getConnection();
-    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
+    const user = await conn.query(getCurrentUser(userProfile.user_id));
     let projs = await conn.query(getProjects);
     let users = await conn.query(getTicketAuth);
     let cat = await conn.query(getTicketCategories);
@@ -531,7 +623,7 @@ app.get("/ticket/:ticknum", secured(), async function(req, res) {
   let conn;
   try {
     conn = await pool.getConnection();
-    const user = await conn.query(getCurrentUser + ' auth0_id = \'' + userProfile.user_id + '\';');
+    const user = await conn.query(getCurrentUser(userProfile.user_id));
     let results = await conn.query(ticketQ);
     let users = await conn.query(getTicketAuth);
     let cat = await conn.query(getTicketCategories);
@@ -539,7 +631,7 @@ app.get("/ticket/:ticknum", secured(), async function(req, res) {
     let notes = await conn.query(notesQ);
     let severity = await conn.query(getSeverity);
     res.render("ticket", {
-      pageTitle: "Ziploll: Ticket #" + reqTicket,
+      pageTitle: "Ziploll: Ticket #" + reqTicket + " " + results[0].title,
       user: user[0].name,
       user_id: user[0].id,
       results: results[0],
@@ -596,3 +688,5 @@ const getDateTime = () => {
   let dateTime = date + ' ' + time;
   return dateTime;
 };
+const cleanRegX = (item) => escapeRegExp(item).replace(/"/g, '\\\"').replace(/'/g, "\\\'")
+const objFormater = (count, id, keyType, value) => '\"' + count + '\": {\"id\":\"'  + id + '\", \"' + keyType + '\":\"'  + value + '}'
