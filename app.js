@@ -218,6 +218,8 @@ const getProjectDetails = (projId) => {return `
 const updateProject = (title, description, cat, projId) => 'UPDATE proj SET project_name = \'' + title + '\', project_description = \'' + description + '\', category = ' + cat + ' WHERE id = ' + projId + ';';
 const insertNewProfile = (fName, lName, email, phone, extReq, add1, add2, city, state, zip, auth0) => 'INSERT INTO users SET first_name = \'' + fName + '\', last_name = \'' + lName + '\', email = \'' + email + '\', phone = ' + phone.replace(/-/g, '') + extReq + ', address_1 = \'' + add1 + '\', address_2 = \'' + add2 + '\', city = \'' + city + '\', state = \'' + state + '\', zipcode = ' + zip + ', auth0_id = \'' + auth0 + '\';';
 const updateProfile = (fName, lName, email, phone, extReq, add1, add2, city, state, zip, auth0, uid) => 'UPDATE users SET first_name = \'' + fName + '\', last_name = \'' + lName + '\', email = \'' + email + '\', phone = ' + phone.replace(/-/g, '') + extReq + ', address_1 = \'' + add1 + '\', address_2 = \'' + add2 + '\', city = \'' + city + '\', state = \'' + state + '\', zipcode = ' + zip + ', auth0_id = \'' + auth0 + '\' WHERE id = ' + uid + ';';
+const newProjInsert = (title, desc, cat, timestamp, createdBy) => 'INSERT INTO proj SET project_name = \'' + title + '\', project_description = \'' + desc + '\', category = ' + cat + ', created_timestamp = \'' + timestamp + '\', created_by = ' + createdBy + ';';
+const insertProjDetails = (id, table, item, extra) => 'INSERT INTO proj_' + table +'s SET project_id = '+ id + ', ' + table + ' = \'' + cleanRegX(item) +'\''+ extra +'; '
 
 // Assigns port to listen to when fired up
 app.listen(3000, function() {
@@ -437,7 +439,8 @@ app.post("/newProject", secured(), async function(req, res) {
   const projectFeat = JSON.parse(req.body.features);
   const projectLang = JSON.parse(req.body.languages);
   const projectSprints = JSON.parse(req.body.sprints);
-  const insertQuery = 'INSERT INTO proj SET project_name = \'' + projectTitle + '\', project_description = \'' + projectDesc + '\', category = ' + req.body.category + ', created_timestamp = \'' + getDateTime() + '\', created_by = ' + req.body.created_by + ';';
+
+  const insertQuery = newProjInsert(projectTitle, projectDesc, req.body.category, getDateTime(), req.body.created_by);
   let insertFeatures = "";
   let insertLanguages = "";
   let insertSprints = "";
@@ -446,13 +449,19 @@ app.post("/newProject", secured(), async function(req, res) {
     conn = await pool.getConnection();
     const results = await conn.query(insertQuery);
     const id = await conn.query(getCreatedProject);
-    Object.keys(projectFeat).forEach(item => (insertFeatures = insertFeatures.concat('INSERT INTO proj_features SET project_id = '+ id[0].id + ', feature = \'' + cleanRegX(projectFeat[item]["feature"]) +'\'; ')));
-    Object.keys(projectLang).forEach(item => {insertLanguages = insertLanguages.concat('INSERT INTO proj_languages SET project_id = '+ id[0].id + ', language = \'' + cleanRegX(projectLang[item]["language"])  +'\'; ')});
-    Object.keys(projectSprints).forEach(item => {insertSprints = insertSprints.concat('INSERT INTO proj_sprints SET project_id = '+ id[0].id + ', sprint = \'' + cleanRegX(projectSprints[item]["sprint"]) + '\', sprint_num =' + projectSprints[item]["sprint_num"] + ', is_checked = ' + (projectSprints[item]["checked"] ? 1 : 0) + '; ')});
-    const feat = await conn.query(insertFeatures);
-    const lang = await conn.query(insertLanguages);
-    const sprints = await conn.query(insertSprints);
-    res.redirect('/project/' + id[0].id);
+    Object.keys(projectFeat).forEach(item => {insertFeatures = insertFeatures.concat(insertProjDetails(id[0].id, 'feature', projectFeat[item]["feature"], ''))});
+    Object.keys(projectLang).forEach(item => {insertLanguages = insertLanguages.concat(insertProjDetails(id[0].id, 'language', projectLang[item]["language"], ''))});
+    Object.keys(projectSprints).forEach(item => {insertSprints = insertSprints.concat(  insertProjDetails(id[0].id, 'sprint', projectSprints[item]["sprint"], ', sprint_num =' + projectSprints[item]["sprint_num"] + ', is_checked = ' + projectSprints[item]["checked"]))});
+    if (insertFeatures != "") {
+      const feat = await conn.query(insertFeatures);
+    }
+    if (insertLanguages != "") {
+      const lang = await conn.query(insertLanguages);
+    }
+    if (insertSprints != "") {
+      const sprints = await conn.query(insertSprints);
+    }
+    res.redirect('/projects/' + id[0].id);
     // res.redirect('/dashboard');
   } catch (err) {
     throw err;
@@ -498,7 +507,7 @@ app.get("/projects/:projnum", secured(), async function(req, res) {
     counter = 0
     for (var i = 0; i < projDesc.length; i++) {
       if (projDesc[i].sprint != null) {
-        item = objFormater(counter, projDesc[i].id, "sprint", projDesc[i].sprint + '\", \"sprint_num\": ' + projDesc[i].sprint_num + ', \"checked\": ' + (projDesc[i].is_checked ? true: false));
+        item = objFormater(counter, projDesc[i].id, "sprint", projDesc[i].sprint + '\", \"sprint_num\": ' + projDesc[i].sprint_num + ', \"checked\": ' + projDesc[i].is_checked);
         sprints = sprints.concat(', ', item);
         counter++;
       }
@@ -533,42 +542,48 @@ app.post("/project", secured(), async function(req, res) {
   let updateLanguages = "";
   let updateSprints = "";
   const projUpdate = (action, table, id, item, where) => action + ' proj_' + table + 's SET project_id = ' + id + ', ' + table + ' = \'' + cleanRegX(item) + '\' ' + where + '; ';
-  console.log(updateQuery);
   try {
     conn = await pool.getConnection();
     const results = await conn.query(updateQuery);
     const id = await conn.query(getCreatedProject);
     Object.keys(projectFeat).forEach(item => {
       if (projectFeat[item]["id"] != 0 && projectFeat[item]["feature"] != '') {
-        updateFeatures = updateFeatures.concat(projUpdate('UPDATE', 'feature', id[0].id, projectFeat[item]["feature"], "WHERE id = " + projectFeat[item]["id"]));
+        updateFeatures = updateFeatures.concat(projUpdate('UPDATE', 'feature', req.body.proj_id, projectFeat[item]["feature"], "WHERE id = " + projectFeat[item]["id"]));
       } else if (projectFeat[item]["id"] != 0 && projectFeat[item]["feature"] === '' ) {
         updateFeatures = updateFeatures.concat('DELETE FROM proj_features WHERE id = ' + projectFeat[item]["id"] + '; ');
       } else if (projectFeat[item]["id"] === 0 && projectFeat[item]["feature"] != '') {
-        updateFeatures = updateFeatures.concat(projUpdate('INSERT INTO', 'feature', id[0].id, projectFeat[item]["feature"], ''));
+        updateFeatures = updateFeatures.concat(projUpdate('INSERT INTO', 'feature', req.body.proj_id, projectFeat[item]["feature"], ''));
       }
     });
     Object.keys(projectLang).forEach(item => {
       if (projectLang[item]["id"] != 0 && projectLang[item]["language"] != '') {
-        updateLanguages = updateLanguages.concat(projUpdate('UPDATE', 'language', id[0].id, projectLang[item]["language"], "WHERE id = " + projectLang[item]["id"]));
+        updateLanguages = updateLanguages.concat(projUpdate('UPDATE', 'language', req.body.proj_id, projectLang[item]["language"], "WHERE id = " + projectLang[item]["id"]));
       } else if (projectLang[item]["id"] != 0 && projectLang[item]["language"] === '' ) {
         updateLanguages = updateLanguages.concat('DELETE FROM proj_languages WHERE id = ' + projectLang[item]["id"] + '; ');
       } else if (projectLang[item]["id"] === 0 && projectLang[item]["language"] != '') {
-        updateLanguages = updateLanguages.concat(projUpdate('INSERT INTO', 'language', id[0].id, projectLang[item]["language"], ''));
+        updateLanguages = updateLanguages.concat(projUpdate('INSERT INTO', 'language', req.body.proj_id, projectLang[item]["language"], ''));
       }
     });
     Object.keys(projectSprints).forEach(item => {
       if (projectSprints[item]["id"] != 0 && projectSprints[item]["sprint"] != '') {
-        updateSprints = updateSprints.concat(projUpdate('UPDATE', 'sprint', id[0].id, projectSprints[item]["sprint"], ', sprint_num =' + projectSprints[item]["sprint_num"] + ', is_checked = ' + (projectSprints[item]["checked"] ? 1 : 0) + ' WHERE id = ' + projectFeat[item]["id"]));
+        updateSprints = updateSprints.concat(projUpdate('UPDATE', 'sprint', req.body.proj_id, projectSprints[item]["sprint"], ', sprint_num =' + projectSprints[item]["sprint_num"] + ', is_checked = ' + projectSprints[item]["checked"] + ' WHERE id = ' + projectSprints[item]["id"]));
       } else if (projectSprints[item]["id"] != 0 && projectSprints[item]["sprint"] === '' ) {
         updateSprints = updateSprints.concat('DELETE FROM proj_sprints WHERE id = ' + projectSprints[item]["id"] + '; ');
       } else if (projectSprints[item]["id"] === 0 && projectSprints[item]["sprint"] != '') {
-        updateSprints = updateSprints.concat(projUpdate('INSERT INTO', 'sprint', id[0].id, projectSprints[item]["sprint"], ', sprint_num =' + projectSprints[item]["sprint_num"] + ', is_checked = ' + (projectSprints[item]["checked"] ? 1 : 0)));
+        updateSprints = updateSprints.concat(projUpdate('INSERT INTO', 'sprint', req.body.proj_id, projectSprints[item]["sprint"], ', sprint_num =' + projectSprints[item]["sprint_num"] + ', is_checked = ' + projectSprints[item]["checked"]));
       }
     });
-    const feat = await conn.query(updateFeatures);
-    const lang = await conn.query(updateLanguages);
-    const sprints = await conn.query(updateSprints);
-    res.redirect('/projects/' + id[0].id);
+    console.log(updateSprints);
+    if (updateFeatures != "") {
+      const feat = await conn.query(updateFeatures);
+    }
+    if (updateLanguages != "") {
+      const lang = await conn.query(updateLanguages);
+    }
+    if (updateSprints != "") {
+      const sprints = await conn.query(updateSprints);
+    }
+    res.redirect('/projects/' + req.body.proj_id);
   } catch (err) {
     throw err;
   } finally {

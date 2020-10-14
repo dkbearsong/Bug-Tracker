@@ -39,7 +39,7 @@
           <label for="desired_feature" style="margin:5px">Desired Features</label>
           <div class="bt-block">
             <input type="text" id="df-input" placeholder="Features..." name="df-input" class="bt-outline bt-gray-text bt-list-spacer bt-input-framing">
-            <span onclick="newDF()" class="bt-addBtn">Add</span>
+            <span onclick="newDF()" id="df-btn" class="bt-addBtn">Add</span>
             <input type="hidden" id="features" name="features" value="<%= features  %>" />
           </div>
         </div>
@@ -52,7 +52,7 @@
           <label for="language-input" style="margin:5px">Languages and Platforms</label>
           <div class="bt-block">
             <input type="text" id="language-input" placeholder="Language..." name="language-input" class="bt-outline bt-gray-text bt-list-spacer bt-input-framing">
-            <span onclick="newLP()" class="bt-addBtn">Add</span>
+            <span onclick="newLP()" id="lang-btn" class="bt-addBtn">Add</span>
             <input type="hidden" id="languages" name="languages" value="<%= languages %>" />
           </div>
         </div>
@@ -65,7 +65,7 @@
           <label for="sprints-input" style="margin:5px">Sprints</label>
           <div class="bt-block">
             <input type="text" id="sprints-input" placeholder="Sprint Item..." name="sprints-input" class="bt-outline bt-gray-text bt-list-spacer bt-input-framing" />
-            <span onclick="newSprint()" class="bt-addBtn">Add</span>
+            <span onclick="newSprint()" id="sprint-btn" class="bt-addBtn">Add</span>
             <input type="hidden" id="sprints" name="sprints" value="<%= sprints %>" />
           </div>
         </div>

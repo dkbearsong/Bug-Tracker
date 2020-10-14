@@ -287,3 +287,14 @@ ON p.category = c.id
 INNER JOIN users u
 ON p.created_by = u.id
 WHERE p.id = 1;
+
+UPDATE proj_sprints SET project_id = 94, sprint = 'test' , sprint_num =1, is_checked = 1 WHERE id = 38;
+UPDATE proj_sprints SET project_id = 94, sprint = 'test1' , sprint_num =2, is_checked = 1 WHERE id = 39;
+UPDATE proj_sprints SET project_id = 94, sprint = 'test3' , sprint_num =4, is_checked = 1 WHERE id = 40;
+UPDATE proj_sprints SET project_id = 94, sprint = 'test4' , sprint_num =5, is_checked = 1 WHERE id = 41;
+
+DELETE FROM proj WHERE id > 2;
+DELETE FROM proj_features WHERE project_id > 2;
+DELETE FROM proj_languages WHERE project_id > 2;
+DELETE FROM proj_sprints WHERE project_id > 2;
+DELETE FROM tickets WHERE proj_id > 2;

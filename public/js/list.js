@@ -1,48 +1,63 @@
-// Code needs some refactoring after adding ability to load up projects page
-
-// Create a "close" button and append it to each list item
-var myNodelist = document.getElementById("projectPage").getElementsByTagName("LI");
-var i;
-for (i = 0; i < myNodelist.length; i++) {
-  var span = document.createElement("SPAN");
-  var txt = document.createTextNode("\u00D7");
-  span.className = "close";
-  span.appendChild(txt);
-  myNodelist[i].appendChild(span);
-}
 
 // Click on a close button to hide the current list item
 var closeFeatures = document.getElementsByClassName("closef");
 var closeLanguages = document.getElementsByClassName("closel");
 var closeSprints = document.getElementsByClassName("closes");
 
+const close = (closeType, arr, inp, key) => {
+  for (let i = 0; i < closeType.length; i++) {
+    closeType[i].onclick = function() {
+      this.parentElement.style.display = "none";
+      arr[i][key] = "";
+      inp.value = JSON.stringify(arr);
+    };
+  }
+}
 
-// Function to create <li> getElementsByTagName
+// Function for redirecting enter keys
+const hitEnter = function(inp, btn){
+  document.getElementById(inp).addEventListener("keydown", function(event){
+    if (event.keyCode === 13) {
+      event.preventDefault();
+      document.getElementById(btn).click();
+    }
+  });
+};
+
+// Functions to create <li>
+
+// create <li> for features and languages and load it with a span that will close it and remove the entry from the array
 const createLi_1 = (innerText, count, listName, spanClasses, liClasses) => {
     let li = document.createElement("li");
     document.getElementById(listName).appendChild(li).setAttribute("class", liClasses);
     li.innerHTML = innerText;
-    li.setAttribute("data-id", count);   //May want to set this to a count rather than an id and then create a id data attribute to hold the actual id
+    li.setAttribute("data-id", count);
     var span = document.createElement("SPAN");
     var txt = document.createTextNode("\u00D7");
     span.className = spanClasses;
     span.appendChild(txt);
     li.appendChild(span);
 }
-const createLi_2 = (innerText, count, isChecked, sprintNum) => {
+// creates <li> for sprints, loading is more complex because of sprint levels that get colors based on the level as well as cross off function, all of this gets added to the array
+const createLi_2 = function(innerText, count, isChecked, sprintNum){
   let li = document.createElement("li");
-  li.setAttribute("onclick", "this.classList.toggle('checked')")
-  document.getElementById("sUL").appendChild(li);
-  var sprintInput = document.getElementById("sprints");
   li.innerHTML = innerText;
   li.setAttribute("data-id", count);
-  if (isChecked === true) {
-    this.classList.toggle('checked')
+  document.getElementById("sUL").appendChild(li);
+  //Event listener to cross out text
+  if (isChecked) {
+    li.classList.add('checked');
   }
+  li.setAttribute("onclick", "this.classList.toggle('checked')");
   li.addEventListener("click", function() {
-    sprints[this.dataset.id]["checked"] = !sprints[this.dataset.id]["checked"];
+    if (sprints[this.dataset.id]["checked"] === 0) {
+      sprints[this.dataset.id]["checked"] = 1;
+    } else {
+      sprints[this.dataset.id]["checked"] = 0;
+    }
     sprintInput.value = JSON.stringify(sprints);
   })
+// sets up all the options as well as the color classes associated with them
   var select = document.createElement("select");
   for (i = 1; i < 11; i++) {
     var option = document.createElement("option");
@@ -51,23 +66,25 @@ const createLi_2 = (innerText, count, isChecked, sprintNum) => {
     option.innerHTML = i;
     if (i === sprintNum) {
       option.selected = 'selected';
-      li.className = "color" + i;
+      li.classList.add("color" + i);
     }
     select.appendChild(option);
   }
   select.className = "bt-outline bt-gray-text bt-input-framing bt-pos-right";
-  const changeSprintLvl = function(sp) {
-    sprints[sp]["sprint_num"] = select.value
-    sprintInput.value = JSON.stringify(sprints);
-  };
-  // Sets up change and event listeners
+  // Sets up change and event listeners for sprint levels to change the sprint level color, change the data in the array, and sets up a stop propogation for the select area to prevent from crossing out
   select.setAttribute("data-name", innerText);
-  select.setAttribute("onchange", "this.parentElement.className=this.options[this.selectedIndex].className;");
   select.addEventListener("change", function() {
-    changeSprintLvl(this.parentElement.dataset.id)
+    if (sprints[this.parentElement.dataset.id]["checked"]) {
+      this.parentElement.className = this.options[this.selectedIndex].className + " checked";
+    } else {
+      this.parentElement.className=this.options[this.selectedIndex].className;
+    }
+    sprints[this.parentElement.dataset.id]["sprint_num"] = select.value
+    sprintInput.value = JSON.stringify(sprints);
   });
   select.setAttribute("onclick", "event.stopPropagation();")
   li.appendChild(select);
+  // close button creation
   var span = document.createElement("SPAN");
   var txt = document.createTextNode("\u00D7");
   span.className = "close close-full closes";
@@ -76,20 +93,21 @@ const createLi_2 = (innerText, count, isChecked, sprintNum) => {
   li.appendChild(span);
 }
 
-// Desired Features
-var features = JSON.parse(document.getElementById("features").value);
+
+// Desired Features, first sets up DOM objects to capture and load arrays and load <li> items already stored, then a function to create new items
+hitEnter("df-input", "df-btn");
+var dfInput = document.getElementById("features");
+var features = JSON.parse(dfInput.value);
 let countDF = 0;
 if (features != {}) {
   Object.keys(features).forEach((item) => {
     createLi_1(features[item]["feature"], countDF, "dfUL", "close close-full closef", "");
     countDF++;
   });
+  close(closeFeatures, features, dfInput, "feature");
 }
-
 function newDF() {
   var inputValue = document.getElementById("df-input").value;
-  var dfInput = document.getElementById("features");
-
   if (inputValue === '') {
     alert("You must write something!");
   } else {
@@ -100,25 +118,21 @@ function newDF() {
   }
   document.getElementById("df-input").value = "";
 
-  for (let i = 0; i < closeFeatures.length; i++) {
-    closeFeatures[i].onclick = function() {
-      this.parentElement.style.display = "none";
-      features[i]["feature"] = "";
-      dfInput.value = JSON.stringify(features);
-    };
-  }
+  close(closeFeatures, features, dfInput, "feature");
 }
 
 // Languages and Platforms
-var languages = JSON.parse(document.getElementById("languages").value);
+hitEnter("language-input", "lang-btn");
+var langInput = document.getElementById("languages");
+var languages = JSON.parse(langInput.value);
 let countLP = 0;
 if (languages != {}) {
   Object.keys(languages).forEach((item) => {
       createLi_1(languages[item]["language"], countLP, "lpUL", "close close-badge closel", "badge badge-pill badge-primary bt-badge");
       countLP++;
   });
+  close(closeLanguages, languages, langInput, "language");
 }
-
 function newLP() {
   var inputValue = document.getElementById("language-input").value;
 
@@ -126,30 +140,27 @@ function newLP() {
     alert("You must write something!");
   } else {
     createLi_1(inputValue, countLP, "lpUL", "close close-badge closel", "badge badge-pill badge-primary bt-badge");
-    var langInput = document.getElementById("languages");
+
     languages[countLP] = {"id": 0, "language": inputValue};
     langInput.value = JSON.stringify(languages);
     countLP++
   }
   document.getElementById("language-input").value = "";
 
-  for (let i = 0; i < closeLanguages.length; i++) {
-    closeLanguages[i].onclick = function() {
-      this.parentElement.style.display = "none";
-      languages[i]["language"] = "";
-      langInput.value = JSON.stringify(languages);
-    }
-  }
+  close(closeLanguages, languages, langInput, "language");
 }
 
 // Sprints
-var sprints = JSON.parse(document.getElementById("sprints").value);
+hitEnter("sprints-input", "sprint-btn");
+var sprintInput = document.getElementById("sprints");
+var sprints = JSON.parse(sprintInput.value);
 let countSP = 0;
 if (sprints != {}) {
   Object.keys(sprints).forEach((item) => {
-    createLi_2(sprints[item].sprint, countSP, sprints[item].is_checked, sprints[item].sprint_num);
+    createLi_2(sprints[item].sprint, countSP, sprints[item]["checked"], sprints[item].sprint_num);
     countSP++;
   });
+  close(closeSprints, sprints, sprintInput, "sprint");
 }
 
 function newSprint() {
@@ -159,7 +170,6 @@ function newSprint() {
   if (inputValue === '') {
     alert("You must write something!");
   } else {
-    var sprintInput = document.getElementById("sprints");
     let checked = false;
     createLi_2(inputValue, countSP, false, 1);
     sprints[countSP] = {
@@ -173,12 +183,5 @@ function newSprint() {
   }
   document.getElementById("sprints-input").value = "";
 
-  // Deletes the li
-  for (let i = 0; i < closeSprints.length; i++) {
-    closeSprints[i].onclick = function() {
-      this.parentElement.style.display = "none";
-      sprints[i]["sprint"] = "";
-      sprintInput.value = JSON.stringify(sprints);
-    }
-  }
+  close(closeSprints, sprints, sprintInput, "sprint");
 }
