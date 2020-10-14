@@ -222,8 +222,6 @@ app.post("/newProfile", secured(), async function(req, res) {
     extReq = '\', ext = ' + req.body.extension;
   }
   const insertQuery = sql.insertNewProfile(req.body.first_name, req.body.last_name, req.body.email, req.body.phone_number, extReq, req.body.address_1, req.body.address_2, req.body.city, req.body.state, req.body.zipcode, req.body.auth0);
-  console.log(insertQuery);
-  console.log(sql.getCreatedUser);
   try {
     conn = await pool.getConnection();
     const results = await conn.query(insertQuery);
@@ -263,7 +261,6 @@ app.post("/profile", secured(), async function(req, res) {
     extReq = '\', ext = ' + req.body.extension;
   }
   const insertQuery = sql.updateProfile(req.body.first_name, req.body.last_name, req.body.email, req.body.phone_number, extReq, req.body.address_1, req.body.address_2, req.body.city, req.body.state, req.body.zipcode, req.body.auth0, req.body.user_id);
-  console.log(insertQuery);
   try {
     conn = await pool.getConnection();
     const results = await conn.query(insertQuery);
@@ -430,7 +427,6 @@ app.post("/project", secured(), async function(req, res) {
         updateSprints = updateSprints.concat(projUpdate('INSERT INTO', 'sprint', req.body.proj_id, projectSprints[item]["sprint"], ', sprint_num =' + projectSprints[item]["sprint_num"] + ', is_checked = ' + projectSprints[item]["checked"]));
       }
     });
-    console.log(updateSprints);
     if (updateFeatures != "") {
       const feat = await conn.query(updateFeatures);
     }
