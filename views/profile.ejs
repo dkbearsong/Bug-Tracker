@@ -32,15 +32,26 @@
           <div class="bt-block bt-vert-spacer">
             <input type="text" name="city" placeholder="City" class="bt-outline bt-gray-text bt-vert-spacer bt-hz-spacer1" value="<%= userProfile.city %>" />
             <select name="state" class="bt-outline bt-gray-text bt-vert-spacer bt-hz-spacer1">
-              <% states.forEach((state) => { %>
-                <% if (state.val === userProfile.state) { %>
-                  <option value="<%= state.val %>" selected><%= state.name %></option>
-                <% } else { %>
-                  <option value="<%= state.val %>"><%= state.name %></option>
-                <% }}); %>
+            <% states.forEach((state) => { %>
+              <% if (state.val === userProfile.state) { %>
+                <option value="<%= state.val %>" selected><%= state.name %></option>
+              <% } else { %>
+                <option value="<%= state.val %>"><%= state.name %></option>
+            <% }}); %>
             </select>
             <input type="text" name="zipcode" placeholder="Zipcode" class="bt-outline bt-gray-text bt-vert-spacer" value="<%= userProfile.zipcode %>"/>
           </div>
+          <div class="bt-block bt-vert-spacer">
+            <label for="categories">User Type:</label><br>
+            <select class="bt-outline bt-gray-text bt-vert-spacer bt-hz-spacer1" name="categories">
+            <% categories.forEach((cat) => { %>
+              <% if (cat.id === userProfile.user_type) { %>
+                <option value="<%= cat.val %>" selected><%= cat.cat_name %></option>
+              <% } else { %>
+                <option value="<%= cat.val %>"><%= cat.cat_name %></option>
+            <% }}); %>
+          </div>
+        </div>
           <div class="bt-block bt-vert-spacer">
             <input type="text" name="auth0" placeholder="Auth0 ID" class="bt-outline bt-gray-text bt-vert-spacer form-control" value="<%= userProfile.auth0_id %>"/>
           </div>

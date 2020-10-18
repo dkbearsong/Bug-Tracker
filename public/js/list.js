@@ -50,10 +50,10 @@ const createLi_2 = function(innerText, count, isChecked, sprintNum){
   }
   li.setAttribute("onclick", "this.classList.toggle('checked')");
   li.addEventListener("click", function() {
-    if (sprints[this.dataset.id]["checked"] === 0) {
-      sprints[this.dataset.id]["checked"] = 1;
+    if (sprints[this.dataset.id]["checked"] === false) {
+      sprints[this.dataset.id]["checked"] = true;
     } else {
-      sprints[this.dataset.id]["checked"] = 0;
+      sprints[this.dataset.id]["checked"] = false;
     }
     sprintInput.value = JSON.stringify(sprints);
   })
@@ -77,7 +77,7 @@ const createLi_2 = function(innerText, count, isChecked, sprintNum){
     if (sprints[this.parentElement.dataset.id]["checked"]) {
       this.parentElement.className = this.options[this.selectedIndex].className + " checked";
     } else {
-      this.parentElement.className=this.options[this.selectedIndex].className;
+      this.parentElement.className = this.options[this.selectedIndex].className;
     }
     sprints[this.parentElement.dataset.id]["sprint_num"] = select.value
     sprintInput.value = JSON.stringify(sprints);
@@ -99,9 +99,9 @@ hitEnter("df-input", "df-btn");
 var dfInput = document.getElementById("features");
 var features = JSON.parse(dfInput.value);
 let countDF = 0;
-if (features != {}) {
-  Object.keys(features).forEach((item) => {
-    createLi_1(features[item]["feature"], countDF, "dfUL", "close close-full closef", "");
+if (features != []) {
+  features.forEach((item) => {
+    createLi_1(item["feature"], countDF, "dfUL", "close close-full closef", "");
     countDF++;
   });
   close(closeFeatures, features, dfInput, "feature");
@@ -126,9 +126,9 @@ hitEnter("language-input", "lang-btn");
 var langInput = document.getElementById("languages");
 var languages = JSON.parse(langInput.value);
 let countLP = 0;
-if (languages != {}) {
-  Object.keys(languages).forEach((item) => {
-      createLi_1(languages[item]["language"], countLP, "lpUL", "close close-badge closel", "badge badge-pill badge-primary bt-badge");
+if (languages != []) {
+languages.forEach((item) => {
+      createLi_1(item["language"], countLP, "lpUL", "close close-badge closel", "badge badge-pill badge-primary bt-badge");
       countLP++;
   });
   close(closeLanguages, languages, langInput, "language");
@@ -155,9 +155,9 @@ hitEnter("sprints-input", "sprint-btn");
 var sprintInput = document.getElementById("sprints");
 var sprints = JSON.parse(sprintInput.value);
 let countSP = 0;
-if (sprints != {}) {
-  Object.keys(sprints).forEach((item) => {
-    createLi_2(sprints[item].sprint, countSP, sprints[item]["checked"], sprints[item].sprint_num);
+if (sprints != []) {
+  sprints.forEach((item) => {
+    createLi_2(item.sprint, countSP, item["is_checked"], item.sprint_num);
     countSP++;
   });
   close(closeSprints, sprints, sprintInput, "sprint");
@@ -178,7 +178,7 @@ function newSprint() {
       "sprint_num": "1",
       "checked": checked
     };
-    sprintInput.value = JSON.stringify(sprints);
+    sprintInput.value = JSON.stringify(sprints);()
     countSP++;
   }
   document.getElementById("sprints-input").value = "";
