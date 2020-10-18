@@ -37,6 +37,13 @@
           <input type="text" name="zipcode" placeholder="Zipcode" class="bt-outline bt-gray-text bt-vert-spacer"/>
         </div>
         <div class="bt-block bt-vert-spacer">
+          <label for="categories">User Type:</label><br>
+          <select class="bt-outline bt-gray-text bt-vert-spacer bt-hz-spacer1" name="categories">
+            <% categories.forEach((cat) => { %>
+              <option value="<%= cat.val %>"><%= cat.cat_name %></option>
+            <% })%>
+        </div>
+        <div class="bt-block bt-vert-spacer">
           <input type="text" name="auth0" placeholder="Auth0 ID" class="bt-outline bt-gray-text bt-vert-spacer form-control"/>
         </div>
       </div>

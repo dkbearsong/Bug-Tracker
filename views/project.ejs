@@ -40,7 +40,7 @@
           <div class="bt-block">
             <input type="text" id="df-input" placeholder="Features..." name="df-input" class="bt-outline bt-gray-text bt-list-spacer bt-input-framing">
             <span onclick="newDF()" id="df-btn" class="bt-addBtn">Add</span>
-            <input type="hidden" id="features" name="features" value="<%= features  %>" />
+            <input type="hidden" id="features" name="features" value="<%= JSON.stringify(features)  %>" />
           </div>
         </div>
 
@@ -53,7 +53,7 @@
           <div class="bt-block">
             <input type="text" id="language-input" placeholder="Language..." name="language-input" class="bt-outline bt-gray-text bt-list-spacer bt-input-framing">
             <span onclick="newLP()" id="lang-btn" class="bt-addBtn">Add</span>
-            <input type="hidden" id="languages" name="languages" value="<%= languages %>" />
+            <input type="hidden" id="languages" name="languages" value="<%= JSON.stringify(languages) %>" />
           </div>
         </div>
 
@@ -66,7 +66,7 @@
           <div class="bt-block">
             <input type="text" id="sprints-input" placeholder="Sprint Item..." name="sprints-input" class="bt-outline bt-gray-text bt-list-spacer bt-input-framing" />
             <span onclick="newSprint()" id="sprint-btn" class="bt-addBtn">Add</span>
-            <input type="hidden" id="sprints" name="sprints" value="<%= sprints %>" />
+            <input type="hidden" id="sprints" name="sprints" value="<%= JSON.stringify(sprints) %>" />
           </div>
         </div>
 
